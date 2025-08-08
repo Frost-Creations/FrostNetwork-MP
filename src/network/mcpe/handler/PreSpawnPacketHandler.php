@@ -1,19 +1,7 @@
 <?php
 
 /*
- *
- *  ____    use pocketmine\network\mcpe\protocol\{
-    AvailableActorIdentifiersPacket,
-    BiomeDefinitionListPacket,
-    CraftingDataPacket,
-    ItemComponentPacket,
-    PlayerAuthInputPacket,
-    ProtocolInfo,
-    RequestChunkRadiusPacket,
-    ServerSettingsResponsePacket,
-    StartGamePacket,
-    types\PlayerMovementSettings
-};     _   __  __ _                  __  __ ____
+ *     _   __  __ _                  __  __ ____
  * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
  * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
  * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
@@ -34,44 +22,31 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
-use pocketmine\network\mcpe\protocol{
-    AvailableActorIdentifiersPacket,
-    BiomeDefinitionListPacket,
-    ClientboundPacket,
-    CraftingDataPacket,
-    ItemRegistryPacket,
-    PlayerAuthInputPacket,
-    ProtocolInfo,
-    RequestChunkRadiusPacket,
-    ServerStatsPacket,
-    StartGamePacket
-};
-use pocketmine\network\mcpe\protocol\types\{
-    BlockPosition,
-    BoolGameRule,
-    CacheableNbt,
-    DimensionIds,
-    Experiments,
-    GameMode,
-    LevelSettings,
-    NetworkPermissions,
-    PlayerMovementSettings,
-    ServerAuthMovementMode,
-    SpawnSettings
-};
-use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\cache\{CraftingDataCache, StaticPacketCache};
-use pocketmine\network\mcpe\convert\TypeConverter;
-use pocketmine\network\mcpe\handler\PacketHandler;
+use pocketmine\network\mcpe\cache\CraftingDataCache;
+use pocketmine\network\mcpe\cache\StaticPacketCache;
 use pocketmine\network\mcpe\InventoryManager;
 use pocketmine\network\mcpe\NetworkSession;
-use function sprintf;
+use pocketmine\network\mcpe\protocol\ItemRegistryPacket;
+use pocketmine\network\mcpe\protocol\PlayerAuthInputPacket;
+use pocketmine\network\mcpe\protocol\ProtocolInfo;
+use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\StartGamePacket;
+use pocketmine\network\mcpe\protocol\types\BlockPosition;
+use pocketmine\network\mcpe\protocol\types\BoolGameRule;
+use pocketmine\network\mcpe\protocol\types\CacheableNbt;
+use pocketmine\network\mcpe\protocol\types\NetworkPermissions;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
+use pocketmine\network\mcpe\protocol\types\Experiments;
+use pocketmine\network\mcpe\protocol\types\LevelSettings;
+use pocketmine\network\mcpe\protocol\types\NetworkPermissions;
+use pocketmine\network\mcpe\protocol\types\PlayerMovementSettings;
+use pocketmine\network\mcpe\protocol\types\ServerAuthMovementMode;
+use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
 use Ramsey\Uuid\Uuid;
-
 /**
  * Handler used for the pre-spawn phase of the session.
  */
