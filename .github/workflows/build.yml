@@ -51,9 +51,15 @@ jobs:
         run: |
           echo "Building release PHAR..."
           composer make-server
+          # Rename output to FrostNetwork.phar if needed
+          if [ -f "PocketMine-MP.phar" ]; then
+            mv PocketMine-MP.phar FrostNetwork.phar
+          fi
 
       - name: Verify PHAR was created
         run: |
+          echo "Listing files in workspace before PHAR check:"
+          ls -la
           if [ ! -f "FrostNetwork.phar" ]; then
             echo "Error: FrostNetwork.phar was not created"
             exit 1
