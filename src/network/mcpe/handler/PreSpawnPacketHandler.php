@@ -58,110 +58,115 @@ class PreSpawnPacketHandler extends PacketHandler{
 	){}
 
 	public function setUp() : void{
-		Timings::$playerNetworkSendPreSpawnGameData->startTiming();
-		try{
-			$protocolId = $this->session->getProtocolId();
-			$location = $this->player->getLocation();
-			$world = $location->getWorld();
+	Timings::$playerNetworkSendPreSpawnGameData->startTiming();
+	try{
+		$protocolId = $this->session->getProtocolId();
+		$location = $this->player->getLocation();
+		$world = $location->getWorld();
 
-			$typeConverter = $this->session->getTypeConverter();
+		$typeConverter = $this->session->getTypeConverter();
 
-			$this->session->getLogger()->debug("Preparing StartGamePacket");
-			$levelSettings = new LevelSettings();
-			$levelSettings->seed = -1;
-			$levelSettings->spawnSettings = new SpawnSettings(SpawnSettings::BIOME_TYPE_DEFAULT, "", DimensionIds::OVERWORLD); //TODO: implement this properly
-			$levelSettings->worldGamemode = $typeConverter->coreGameModeToProtocol($this->server->getGamemode());
-			$levelSettings->difficulty = $world->getDifficulty();
-			$levelSettings->spawnPosition = BlockPosition::fromVector3($world->getSpawnLocation());
-			$levelSettings->hasAchievementsDisabled = true;
-			$levelSettings->time = $world->getTime();
-			$levelSettings->eduEditionOffer = 0;
-			$levelSettings->rainLevel = 0; //TODO: implement these properly
-			$levelSettings->lightningLevel = 0;
-			$levelSettings->commandsEnabled = true;
-			$levelSettings->gameRules = [
-				"naturalregeneration" => new BoolGameRule(false, false), //Hack for client side regeneration
-				"locatorbar" => new BoolGameRule(false, false) //Disable client-side tracking of nearby players
-			];
-			$levelSettings->experiments = new Experiments([], false);
+		$this->session->getLogger()->debug("Preparing StartGamePacket");
 
-			$protocolId = $this->session->getProtocolId();
-			$args = [
-				$this->player->getId(),
-				$this->player->getId(),
-				$typeConverter->coreGameModeToProtocol($this->player->getGamemode()),
-				$this->player->getOffsetPosition($location),
-				$location->pitch,
-				$location->yaw,
-				new CacheableNbt(CompoundTag::create()),
-				$levelSettings,
-				"",
-				$this->server->getMotd(),
-				"",
-				false,
-				new PlayerMovementSettings(ServerAuthMovementMode::SERVER_AUTHORITATIVE_V3, 0, true),
-				0,
-				0,
-				"",
-				true,
-				"FrostNetwork v5.0",
-				Uuid::fromString(Uuid::NIL),
-				false,
-				false,
-				false, 
-				[], 
-				new NetworkPermissions(true), 
-				0, 
-				$typeConverter->getItemTypeDictionary()->getEntries()
-			];
-			$this->session->sendDataPacket(StartGamePacket::create(...$args));
+		$levelSettings = new LevelSettings();
+		$levelSettings->seed = -1;
+		$levelSettings->spawnSettings = new SpawnSettings(SpawnSettings::BIOME_TYPE_DEFAULT, "", DimensionIds::OVERWORLD);
+		$levelSettings->worldGamemode = $typeConverter->coreGameModeToProtocol($this->server->getGamemode());
+		$levelSettings->difficulty = $world->getDifficulty();
+		$levelSettings->spawnPosition = BlockPosition::fromVector3($world->getSpawnLocation());
+		$levelSettings->hasAchievementsDisabled = true;
+		$levelSettings->time = $world->getTime();
+		$levelSettings->eduEditionOffer = 0;
+		$levelSettings->rainLevel = 0;
+		$levelSettings->lightningLevel = 0;
+		$levelSettings->commandsEnabled = true;
+		$levelSettings->gameRules = [
+			"naturalregeneration" => new BoolGameRule(false, false),
+			"locatorbar" => new BoolGameRule(false, false)
+		];
+		$levelSettings->experiments = new Experiments([], false);
 
-			if($this->session->getProtocolId() >= ProtocolInfo::PROTOCOL_1_21_60){
-				$this->session->getLogger()->debug("Sending items");
-				$this->session->sendDataPacket(ItemRegistryPacket::create($typeConverter->getItemTypeDictionary()->getEntries()));
-			}
+		$blockPalette = $typeConverter->getBlockPalette()->getEntries();
+		$blockPaletteChecksum = crc32(json_encode($blockPalette));
+		$itemTable = $typeConverter->getItemTypeDictionary()->getEntries();
+		$networkPermissions = new NetworkPermissions(true);
 
-			$this->session->getLogger()->debug("Sending actor identifiers");
-			$this->session->sendDataPacket(StaticPacketCache::getInstance()->getAvailableActorIdentifiers());
+		$args = [
+			$this->player->getId(),
+			$this->player->getId(),
+			$typeConverter->coreGameModeToProtocol($this->player->getGamemode()),
+			$this->player->getOffsetPosition($location),
+			$location->pitch,
+			$location->yaw,
+			new CacheableNbt(CompoundTag::create()),
+			$levelSettings,
+			"",
+			$this->server->getMotd(),
+			"",
+			false,
+			new PlayerMovementSettings(ServerAuthMovementMode::SERVER_AUTHORITATIVE_V3, 0, true),
+			0,
+			0,
+			"",
+			true,
+			"FrostNetwork v5.0",
+			Uuid::fromString(Uuid::NIL),
+			false,
+			false,
+			false,
+			$blockPalette,
+			$networkPermissions,
+			$blockPaletteChecksum,
+			$itemTable
+		];
 
-			$this->session->getLogger()->debug("Sending biome definitions");
-			$this->session->sendDataPacket(StaticPacketCache::getInstance()->getBiomeDefs($this->session->getProtocolId()));
+		$this->session->sendDataPacket(StartGamePacket::create(...$args));
 
-			$this->session->getLogger()->debug("Sending attributes");
-			$this->session->getEntityEventBroadcaster()->syncAttributes([$this->session], $this->player, $this->player->getAttributeMap()->getAll());
-
-			$this->session->getLogger()->debug("Sending available commands");
-			$this->session->syncAvailableCommands();
-
-			$this->session->getLogger()->debug("Sending abilities");
-			$this->session->syncAbilities($this->player);
-			$this->session->syncAdventureSettings();
-
-			$this->session->getLogger()->debug("Sending effects");
-			foreach($this->player->getEffects()->all() as $effect){
-				$this->session->getEntityEventBroadcaster()->onEntityEffectAdded([$this->session], $this->player, $effect, false);
-			}
-
-			$this->session->getLogger()->debug("Sending actor metadata");
-			$this->player->sendData([$this->player]);
-
-			$this->session->getLogger()->debug("Sending inventory");
-			$this->inventoryManager->syncAll();
-			$this->inventoryManager->syncSelectedHotbarSlot();
-
-			$this->session->getLogger()->debug("Sending creative inventory data");
-			$this->inventoryManager->syncCreative();
-
-			$this->session->getLogger()->debug("Sending crafting data");
-			$this->session->sendDataPacket(CraftingDataCache::getInstance($protocolId)->getCache($this->server->getCraftingManager()));
-
-			$this->session->getLogger()->debug("Sending player list");
-			$this->session->syncPlayerList($this->server->getOnlinePlayers());
-		}finally{
-			Timings::$playerNetworkSendPreSpawnGameData->stopTiming();
+		if($protocolId >= ProtocolInfo::PROTOCOL_1_21_60){
+			$this->session->getLogger()->debug("Sending items");
+			$this->session->sendDataPacket(ItemRegistryPacket::create($itemTable));
 		}
-	}
 
+		$this->session->getLogger()->debug("Sending actor identifiers");
+		$this->session->sendDataPacket(StaticPacketCache::getInstance()->getAvailableActorIdentifiers());
+
+		$this->session->getLogger()->debug("Sending biome definitions");
+		$this->session->sendDataPacket(StaticPacketCache::getInstance()->getBiomeDefs($protocolId));
+
+		$this->session->getLogger()->debug("Sending attributes");
+		$this->session->getEntityEventBroadcaster()->syncAttributes([$this->session], $this->player, $this->player->getAttributeMap()->getAll());
+
+		$this->session->getLogger()->debug("Sending available commands");
+		$this->session->syncAvailableCommands();
+
+		$this->session->getLogger()->debug("Sending abilities");
+		$this->session->syncAbilities($this->player);
+		$this->session->syncAdventureSettings();
+
+		$this->session->getLogger()->debug("Sending effects");
+		foreach($this->player->getEffects()->all() as $effect){
+			$this->session->getEntityEventBroadcaster()->onEntityEffectAdded([$this->session], $this->player, $effect, false);
+		}
+
+		$this->session->getLogger()->debug("Sending actor metadata");
+		$this->player->sendData([$this->player]);
+
+		$this->session->getLogger()->debug("Sending inventory");
+		$this->inventoryManager->syncAll();
+		$this->inventoryManager->syncSelectedHotbarSlot();
+
+		$this->session->getLogger()->debug("Sending creative inventory data");
+		$this->inventoryManager->syncCreative();
+
+		$this->session->getLogger()->debug("Sending crafting data");
+		$this->session->sendDataPacket(CraftingDataCache::getInstance($protocolId)->getCache($this->server->getCraftingManager()));
+
+		$this->session->getLogger()->debug("Sending player list");
+		$this->session->syncPlayerList($this->server->getOnlinePlayers());
+	}finally{
+		Timings::$playerNetworkSendPreSpawnGameData->stopTiming();
+	}
+}
 	public function handleRequestChunkRadius(RequestChunkRadiusPacket $packet) : bool{
 		$this->player->setViewDistance($packet->radius);
 
