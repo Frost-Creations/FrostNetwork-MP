@@ -28,10 +28,12 @@ use pocketmine\network\mcpe\cache\CraftingDataCache;
 use pocketmine\network\mcpe\cache\StaticPacketCache;
 use pocketmine\network\mcpe\InventoryManager;
 use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ItemRegistryPacket;
 use pocketmine\network\mcpe\protocol\PlayerAuthInputPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\ServerStatsPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\BlockPosition;
 use pocketmine\network\mcpe\protocol\types\BoolGameRule;
@@ -43,6 +45,9 @@ use pocketmine\network\mcpe\protocol\types\NetworkPermissions;
 use pocketmine\network\mcpe\protocol\types\PlayerMovementSettings;
 use pocketmine\network\mcpe\protocol\types\ServerAuthMovementMode;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
+use pocketmine\network\mcpe\protocol\AvailableActorIdentifiersPacket;
+use pocketmine\network\mcpe\protocol\BiomeDefinitionListPacket;
+use pocketmine\network\mcpe\protocol\CraftingDataPacket;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
@@ -89,8 +94,6 @@ class PreSpawnPacketHandler extends PacketHandler{
 
 			// Protocol 827+ (1.21.100+) expects NetworkPermissions, older expects bool
 			$protocolId = $this->session->getProtocolId();
-			$enableTickDeathSystems = false;
-			$networkPermissions = new NetworkPermissions(disableClientSounds: true);
 			$args = [
 				$this->player->getId(),
 				$this->player->getId(),
@@ -114,12 +117,16 @@ class PreSpawnPacketHandler extends PacketHandler{
 				false,
 				false
 			];
+			$networkPermissions = new NetworkPermissions(disableClientSounds: true);
 			if($protocolId >= ProtocolInfo::PROTOCOL_1_21_100){
 				$args[] = $networkPermissions;
+				$args[] = false; 
+				$args[] = []; 
 			}else{
-				$args[] = $enableTickDeathSystems;
+				$args[] = false; 
+				$args[] = [];
+				$args[] = $networkPermissions;
 			}
-			$args[] = [];
 			$args[] = 0;
 			$args[] = $typeConverter->getItemTypeDictionary()->getEntries();
 			$this->session->sendDataPacket(StartGamePacket::create(...$args));
@@ -179,6 +186,17 @@ class PreSpawnPacketHandler extends PacketHandler{
 	public function handlePlayerAuthInput(PlayerAuthInputPacket $packet) : bool{
 		//the client will send this every tick once we start sending chunks, but we don't handle it in this stage
 		//this is very spammy so we filter it out
+		return true;
+	}
+
+	public function handleServerStats(ServerStatsPacket $packet) : bool{
+		// We'll receive the server stats packet in pre-spawn phase
+		// The packet contains server and network timing information
+		$this->session->getLogger()->debug(sprintf(
+			"Server Stats - Server Time: %.2f, Network Time: %.2f",
+			$packet->getServerTime(),
+			$packet->getNetworkTime()
+		));
 		return true;
 	}
 }
