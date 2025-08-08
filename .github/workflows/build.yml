@@ -100,34 +100,42 @@ jobs:
           
           # Create changelog content
           cat > release_notes.md << 'EOF'
-          ## PocketMine-PFS Release ${{ steps.tag.outputs.tag }}
+          ## FrostNetwork-MP Release ${{ steps.tag.outputs.tag }}
           
           ### 🚀 Features
-          - **Custom PFS Branding**: Complete rebrand with PixelForge Studios identity
-          - **Smart Plugin Auto-loading**: Automatic folder-based plugin detection and loading
-          - **Discord Crash Reporting**: Real-time crash notifications to Discord webhook
+          - **1.21.100**: add 1.21.100 version support
           - **Enhanced Error Handling**: Improved plugin error reporting and recovery
           - **CI-Friendly Loading**: Intelligent plugin loading for development and production
+          - **Resource Pack Encryption**: Built-in support for encrypted resource packs
+          - **Resource Pack Tools**: Command-line utilities for pack management
+          - **Pack Key Management**: Automatic key handling and verification
+          - **Cross-Platform Pack Support**: Compatible with WaterDog and PowerNukkitX encrypted packs
           
           ### 🛠️ Improvements
           - Removed PMMP communications (auto-updater, statistics, reporting)
-          - Custom startup messages with PFS branding
           - Optimized for Windows development environments
           - Built-in FolderPluginLoader for seamless development workflow
           - Enhanced crash dump system with Discord integration
+          - Advanced resource pack management and encryption tools
+          - Improved resource pack loading and validation
+          - Secure key storage and management
+          - Command-line utilities for pack operations
           
           ### 📦 This Release
           - **Build Type**: Stable Release (Production Ready)
-          - **Based on**: PocketMine-MP 5.32.1
+          - **Based on**: PocketMine-MP 5.0.1
           - **Channel**: Dev
           - **Development Build**: No
           
-          ### 📋 Installation
+          ### 📋 Installation & Tools
           
           #### Quick Start
           ```bash
           # Download the PHAR file
           wget https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/FrostNetwork.phar
+          
+          # Resource Pack Encryption (Optional)
+          php tools/encrypt-pack.php resource_packs/my-pack.zip resource_packs/encrypted-pack.zip
           
           # Make it executable (Linux/Mac)
           chmod +x FrostNetwork.phar
@@ -142,16 +150,14 @@ jobs:
           php FrostNetwork.phar
           ```
           
-          ### 🔗 Links
-          - **Discord**: https://discord.gg/zfagCsEJyX
-          - **GitHub**: https://github.com/pixelforge-studios-PMMP/FrostNetwork
-          - **Documentation**: See README.md
           
           ### ⚠️ Notes
           - This is a **stable release** suitable for production servers
-          - All PFS-specific features are included and enabled
           - Compatible with PocketMine-MP plugins (API 5.0.0)
           - Requires PHP 8.1+ with PocketMine extensions
+          - Resource pack encryption requires OpenSSL extension
+          - Compatible with encrypted packs from WaterDog and PowerNukkitX
+          - Pack encryption tools available in tools/ directory
           
           EOF
           
