@@ -87,14 +87,18 @@ class PreSpawnPacketHandler extends PacketHandler{
 			];
 			$levelSettings->experiments = new Experiments([], false);
 
-			$this->session->sendDataPacket(StartGamePacket::create(
+			// Protocol 827+ (1.21.100+) expects NetworkPermissions, older expects bool
+			$protocolId = $this->session->getProtocolId();
+			$enableTickDeathSystems = false;
+			$networkPermissions = new NetworkPermissions(disableClientSounds: true);
+			$args = [
 				$this->player->getId(),
 				$this->player->getId(),
 				$typeConverter->coreGameModeToProtocol($this->player->getGamemode()),
 				$this->player->getOffsetPosition($location),
 				$location->pitch,
 				$location->yaw,
-				new CacheableNbt(CompoundTag::create()), //TODO: we don't care about this right now
+				new CacheableNbt(CompoundTag::create()),
 				$levelSettings,
 				"",
 				$this->server->getMotd(),
@@ -105,15 +109,20 @@ class PreSpawnPacketHandler extends PacketHandler{
 				0,
 				"",
 				true,
-				"NetherGames v5.0",
+				"FrostNetwork v5.0",
 				Uuid::fromString(Uuid::NIL),
 				false,
-				false,
-				new NetworkPermissions(disableClientSounds: true),
-				[],
-				0,
-				$typeConverter->getItemTypeDictionary()->getEntries(),
-			));
+				false
+			];
+			if($protocolId >= ProtocolInfo::PROTOCOL_1_21_100){
+				$args[] = $networkPermissions;
+			}else{
+				$args[] = $enableTickDeathSystems;
+			}
+			$args[] = [];
+			$args[] = 0;
+			$args[] = $typeConverter->getItemTypeDictionary()->getEntries();
+			$this->session->sendDataPacket(StartGamePacket::create(...$args));
 
 			if($this->session->getProtocolId() >= ProtocolInfo::PROTOCOL_1_21_60){
 				$this->session->getLogger()->debug("Sending items");
