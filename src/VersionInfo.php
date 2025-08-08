@@ -31,9 +31,9 @@ use function str_repeat;
 
 final class VersionInfo{
 	public const NAME = "FrostNetwork-MP";
-	public const BASE_VERSION = "5.0.0";
-	public const IS_DEVELOPMENT_BUILD = false;
-	public const BUILD_CHANNEL = "stable";
+	public const BASE_VERSION = "5.0.1";
+	public const IS_DEVELOPMENT_BUILD = true;
+	public const BUILD_CHANNEL = "dev";
 
 	/**
 	 * PocketMine-MP-specific version ID for world data. Used to determine what fixes need to be applied to old world

@@ -100,6 +100,8 @@ trait CommonThreadPartsTrait{
 		//*before* the shutdown handler is invoked, so we might land here before the crash info has been set.
 		//In the future this should probably be fixed by running the shutdown handlers before setting isTerminated,
 		//but this workaround should be good enough for now.
+		//WARNING: Do not call this inside a synchronized block on this thread's context. Because the shutdown handler
+		//runs in a synchronized block, this will result in a deadlock.
 		if($this->isTerminated() && !$this->isJoined()){
 			$this->join();
 		}
@@ -162,16 +164,13 @@ trait CommonThreadPartsTrait{
 			if($this->isTerminated() && $this->crashInfo === null){
 				$last = error_get_last();
 				if($last !== null && ($last["type"] & CrashDump::FATAL_ERROR_MASK) !== 0){
-					//fatal error
 					$crashInfo = ThreadCrashInfo::fromLastErrorInfo($last, $this->getThreadName());
 				}else{
-					//probably misused exit()
 					$crashInfo = ThreadCrashInfo::fromThrowable(new \RuntimeException("Thread crashed without an error - perhaps exit() was called?"), $this->getThreadName());
 				}
 				$this->crashInfo = $crashInfo;
 
 				$lines = [];
-				//mimic exception printed format
 				$lines[] = "Fatal error: " . $crashInfo->makePrettyMessage();
 				$lines[] = "--- Stack trace ---";
 				foreach($crashInfo->getTrace() as $frame){

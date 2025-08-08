@@ -34,6 +34,7 @@ final class BlockTypeNames{
 	public const ACACIA_BUTTON = "minecraft:acacia_button";
 	public const ACACIA_DOOR = "minecraft:acacia_door";
 	public const ACACIA_DOUBLE_SLAB = "minecraft:acacia_double_slab";
+	public const COPPER_CHEST = "minecraft:copper_chest";
 	public const ACACIA_FENCE = "minecraft:acacia_fence";
 	public const ACACIA_FENCE_GATE = "minecraft:acacia_fence_gate";
 	public const ACACIA_HANGING_SIGN = "minecraft:acacia_hanging_sign";
@@ -41,6 +42,13 @@ final class BlockTypeNames{
 	public const ACACIA_LOG = "minecraft:acacia_log";
 	public const ACACIA_PLANKS = "minecraft:acacia_planks";
 	public const ACACIA_PRESSURE_PLATE = "minecraft:acacia_pressure_plate";
+	public const WAXED_EXPOSED_COPPER_CHEST = "minecraft:waxed_exposed_copper_chest";
+	public const WAXED_WEATHERED_COPPER_CHEST = "minecraft:waxed_weathered_copper_chest";
+	public const WEATHERED_COPPER_CHEST = "minecraft:weathered_copper_chest";
+	public const WAXED_OXIDIZED_COPPER_CHEST = "minecraft:waxed_oxidized_copper_chest";
+	public const EXPOSED_COPPER_CHEST = "minecraft:exposed_copper_chest";
+	public const OXIDIZED_COPPER_CHEST = "minecraft:oxidized_copper_chest";
+    public const WAXED_COPPER_CHEST = "minecraft:waxed_copper_chest";
 	public const ACACIA_SAPLING = "minecraft:acacia_sapling";
 	public const ACACIA_SLAB = "minecraft:acacia_slab";
 	public const ACACIA_STAIRS = "minecraft:acacia_stairs";
