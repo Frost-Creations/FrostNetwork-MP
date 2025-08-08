@@ -23,31 +23,44 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
+use nethergamesmc\bedrock\protocol\{
+    AvailableActorIdentifiersPacket,
+    BiomeDefinitionListPacket,
+    ClientboundPacket,
+    CraftingDataPacket,
+    ItemRegistryPacket,
+    PlayerAuthInputPacket,
+    ProtocolInfo,
+    RequestChunkRadiusPacket,
+    ServerStatsPacket,
+    StartGamePacket
+};
+use nethergamesmc\bedrock\protocol\types\{
+    BlockPosition,
+    BoolGameRule,
+    CacheableNbt,
+    DimensionIds,
+    Experiments,
+    GameMode,
+    LevelSettings,
+    PlayerMovementSettings,
+    ServerAuthMovementMode,
+    SpawnSettings
+};
+use nethergamesmc\bedrock\protocol\types\NetworkPermissions;
+};
+use nethergamesmc\bedrock\protocol\types\inventory\ItemStack;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\cache\CraftingDataCache;
-use pocketmine\network\mcpe\cache\StaticPacketCache;
+use pocketmine\network\mcpe\cache\{CraftingDataCache, StaticPacketCache};
+use pocketmine\network\mcpe\convert\TypeConverter;
+use pocketmine\network\mcpe\handler\PacketHandler;
 use pocketmine\network\mcpe\InventoryManager;
 use pocketmine\network\mcpe\NetworkSession;
-use pocketmine\network\mcpe\protocol\ClientboundPacket;
-use pocketmine\network\mcpe\protocol\ItemRegistryPacket;
-use pocketmine\network\mcpe\protocol\PlayerAuthInputPacket;
-use pocketmine\network\mcpe\protocol\ProtocolInfo;
-use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
-use pocketmine\network\mcpe\protocol\ServerStatsPacket;
-use pocketmine\network\mcpe\protocol\StartGamePacket;
-use pocketmine\network\mcpe\protocol\types\BlockPosition;
-use pocketmine\network\mcpe\protocol\types\BoolGameRule;
-use pocketmine\network\mcpe\protocol\types\CacheableNbt;
-use pocketmine\network\mcpe\protocol\types\DimensionIds;
-use pocketmine\network\mcpe\protocol\types\Experiments;
-use pocketmine\network\mcpe\protocol\types\LevelSettings;
-use pocketmine\network\mcpe\protocol\types\NetworkPermissions;
-use pocketmine\network\mcpe\protocol\types\PlayerMovementSettings;
-use pocketmine\network\mcpe\protocol\types\ServerAuthMovementMode;
-use pocketmine\network\mcpe\protocol\types\SpawnSettings;
-use pocketmine\network\mcpe\protocol\AvailableActorIdentifiersPacket;
-use pocketmine\network\mcpe\protocol\BiomeDefinitionListPacket;
-use pocketmine\network\mcpe\protocol\CraftingDataPacket;
+use pocketmine\player\Player;
+use pocketmine\Server;
+use pocketmine\timings\Timings;
+use Ramsey\Uuid\Uuid;
+use function sprintf;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
@@ -92,7 +105,6 @@ class PreSpawnPacketHandler extends PacketHandler{
 			];
 			$levelSettings->experiments = new Experiments([], false);
 
-			// Protocol 827+ (1.21.100+) expects NetworkPermissions, older expects bool
 			$protocolId = $this->session->getProtocolId();
 			$args = [
 				$this->player->getId(),
@@ -115,20 +127,13 @@ class PreSpawnPacketHandler extends PacketHandler{
 				"FrostNetwork v5.0",
 				Uuid::fromString(Uuid::NIL),
 				false,
-				false
+				false,
+				false, 
+				[], 
+				new NetworkPermissions(true), 
+				0, 
+				$typeConverter->getItemTypeDictionary()->getEntries()
 			];
-			$networkPermissions = new NetworkPermissions(disableClientSounds: true);
-			if($protocolId >= ProtocolInfo::PROTOCOL_1_21_100){
-				$args[] = $networkPermissions;
-				$args[] = false; 
-				$args[] = []; 
-			}else{
-				$args[] = false; 
-				$args[] = [];
-				$args[] = $networkPermissions;
-			}
-			$args[] = 0;
-			$args[] = $typeConverter->getItemTypeDictionary()->getEntries();
 			$this->session->sendDataPacket(StartGamePacket::create(...$args));
 
 			if($this->session->getProtocolId() >= ProtocolInfo::PROTOCOL_1_21_60){
