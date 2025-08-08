@@ -57,7 +57,7 @@ class PreSpawnPacketHandler extends PacketHandler{
 		private InventoryManager $inventoryManager
 	){}
 
-	public function setUp() : void{
+public function setUp() : void{
 	Timings::$playerNetworkSendPreSpawnGameData->startTiming();
 	try{
 		$protocolId = $this->session->getProtocolId();
@@ -86,7 +86,7 @@ class PreSpawnPacketHandler extends PacketHandler{
 		];
 		$levelSettings->experiments = new Experiments([], false);
 
-		$blockPalette = $typeConverter->getBlockPalette()->getEntries();
+		$blockPalette = StaticPacketCache::getInstance()->getBlockPalette($protocolId)->getEntries();
 		$blockPaletteChecksum = crc32(json_encode($blockPalette));
 		$itemTable = $typeConverter->getItemTypeDictionary()->getEntries();
 		$networkPermissions = new NetworkPermissions(true);
