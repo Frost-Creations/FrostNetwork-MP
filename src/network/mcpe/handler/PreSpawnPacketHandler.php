@@ -2,7 +2,18 @@
 
 /*
  *
- *  ____            _        _   __  __ _                  __  __ ____
+ *  ____    use pocketmine\network\mcpe\protocol\{
+    AvailableActorIdentifiersPacket,
+    BiomeDefinitionListPacket,
+    CraftingDataPacket,
+    ItemComponentPacket,
+    PlayerAuthInputPacket,
+    ProtocolInfo,
+    RequestChunkRadiusPacket,
+    ServerSettingsResponsePacket,
+    StartGamePacket,
+    types\PlayerMovementSettings
+};     _   __  __ _                  __  __ ____
  * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
  * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
  * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
@@ -23,7 +34,7 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
-use nethergamesmc\bedrock\protocol\{
+use pocketmine\network\mcpe\protocol{
     AvailableActorIdentifiersPacket,
     BiomeDefinitionListPacket,
     ClientboundPacket,
@@ -35,7 +46,7 @@ use nethergamesmc\bedrock\protocol\{
     ServerStatsPacket,
     StartGamePacket
 };
-use nethergamesmc\bedrock\protocol\types\{
+use pocketmine\network\mcpe\protocol\types\{
     BlockPosition,
     BoolGameRule,
     CacheableNbt,
@@ -43,23 +54,18 @@ use nethergamesmc\bedrock\protocol\types\{
     Experiments,
     GameMode,
     LevelSettings,
+    NetworkPermissions,
     PlayerMovementSettings,
     ServerAuthMovementMode,
     SpawnSettings
 };
-use nethergamesmc\bedrock\protocol\types\NetworkPermissions;
-};
-use nethergamesmc\bedrock\protocol\types\inventory\ItemStack;
+use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\cache\{CraftingDataCache, StaticPacketCache};
 use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\handler\PacketHandler;
 use pocketmine\network\mcpe\InventoryManager;
 use pocketmine\network\mcpe\NetworkSession;
-use pocketmine\player\Player;
-use pocketmine\Server;
-use pocketmine\timings\Timings;
-use Ramsey\Uuid\Uuid;
 use function sprintf;
 use pocketmine\player\Player;
 use pocketmine\Server;
