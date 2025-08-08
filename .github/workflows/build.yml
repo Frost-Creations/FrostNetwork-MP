@@ -46,6 +46,7 @@ jobs:
           echo "Verifying changes:"
           grep -n "IS_DEVELOPMENT_BUILD\|BUILD_CHANNEL" src/VersionInfo.php
 
+
       - name: Build PHAR
         run: |
           echo "Building release PHAR..."
@@ -120,7 +121,7 @@ jobs:
           #### Quick Start
           ```bash
           # Download the PHAR file
-          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/PocketMine-PFS.phar
+          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/FrostNetwork.phar
           
           # Make it executable (Linux/Mac)
           chmod +x FrostNetwork.phar
