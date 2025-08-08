@@ -13,14 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          extensions: mbstring, phar, curl, dom, json, tokenizer, xml, xmlwriter, xmlreader, pcre, fileinfo, intl, gd, sqlite3, zip
+
+
+
+      - name: Download PocketMine PHP binaries
+        run: |
+          curl -L -o php.tar.gz https://github.com/pmmp/PHP-Binaries/releases/download/php-8.1-latest/PHP-8.1-Linux-x86_64.tar.gz
+          mkdir pmmp-php
+          tar -xzf php.tar.gz -C pmmp-php
+          echo "$(pwd)/pmmp-php/bin" >> $GITHUB_PATH
+
+      - name: Use PocketMine PHP
+        run: php -v
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
+        run: |
+          curl -sS https://getcomposer.org/installer | php
+          php composer.phar install --no-dev --optimize-autoloader
 
       - name: Build PocketMine-MP Phar
         run: php src/PocketMine.php --make-phar
