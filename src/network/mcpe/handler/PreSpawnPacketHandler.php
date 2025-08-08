@@ -174,15 +174,4 @@ class PreSpawnPacketHandler extends PacketHandler{
 		//this is very spammy so we filter it out
 		return true;
 	}
-
-	public function handleServerStats(ServerStatsPacket $packet) : bool{
-		// We'll receive the server stats packet in pre-spawn phase
-		// The packet contains server and network timing information
-		$this->session->getLogger()->debug(sprintf(
-			"Server Stats - Server Time: %.2f, Network Time: %.2f",
-			$packet->getServerTime(),
-			$packet->getNetworkTime()
-		));
-		return true;
-	}
 }
