@@ -84,6 +84,7 @@ use pocketmine\plugin\PharPluginLoader;
 use pocketmine\plugin\PluginEnableOrder;
 use pocketmine\plugin\PluginGraylist;
 use pocketmine\plugin\PluginManager;
+use pocketmine\plugin\PluginLoader;
 use pocketmine\plugin\PluginOwned;
 use pocketmine\plugin\ScriptPluginLoader;
 use pocketmine\promise\Promise;
@@ -103,6 +104,7 @@ use pocketmine\updater\UpdateChecker;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\BroadcastLoggerForwarder;
 use pocketmine\utils\Config;
+use pocketmine\utils\DiscordCrashReporter;
 use pocketmine\utils\Filesystem;
 use pocketmine\utils\Internet;
 use pocketmine\utils\MainLogger;
@@ -1073,6 +1075,35 @@ class Server{
 			$this->pluginManager = new PluginManager($this, $this->configGroup->getPropertyBool(Yml::PLUGINS_LEGACY_DATA_DIR, true) ? null : Path::join($this->dataPath, "plugin_data"), $pluginGraylist);
 			$this->pluginManager->registerInterface(new PharPluginLoader($this->autoloader));
 			$this->pluginManager->registerInterface(new ScriptPluginLoader());
+    
+				$this->pluginManager->registerInterface(new class($this->autoloader) implements PluginLoader {
+				public function __construct(private readonly ThreadSafeClassLoader $loader) {}
+				
+				public function canLoadPlugin(string $path): bool {
+					return is_dir($path) && file_exists($path . "/plugin.yml") && file_exists($path . "/src/");
+				}
+				
+				public function loadPlugin(string $file): void {
+					$description = $this->getPluginDescription($file);
+					if($description !== null) {
+						$this->loader->addPath($description->getSrcNamespacePrefix(), "$file/src");
+					}
+				}
+				
+				public function getPluginDescription(string $file) : ?plugin\PluginDescription {
+					if(is_dir($file) && file_exists($file . "/plugin.yml")) {
+						$yaml = @file_get_contents($file . "/plugin.yml");
+						if($yaml !== "") {
+							return new plugin\PluginDescription($yaml);
+						}
+					}
+					return null;
+				}
+
+				public function getAccessProtocol() : string {
+					return "";
+				}
+			});
 
 			$providerManager = new WorldProviderManager();
 			if(
@@ -1088,7 +1119,7 @@ class Server{
 			$this->worldManager->setAutoSave($this->configGroup->getConfigBool(ServerProperties::AUTO_SAVE, $this->worldManager->getAutoSave()));
 			$this->worldManager->setAutoSaveInterval($this->configGroup->getPropertyInt(Yml::TICKS_PER_AUTOSAVE, $this->worldManager->getAutoSaveInterval()));
 
-			$this->updater = new UpdateChecker($this, $this->configGroup->getPropertyString(Yml::AUTO_UPDATER_HOST, "update.pmmp.io"));
+			//$this->updater = new UpdateChecker($this, $this->configGroup->getPropertyString(Yml::AUTO_UPDATER_HOST, "update.pmmp.io"));
 
 			$this->queryInfo = new QueryInfo($this);
 
@@ -1133,9 +1164,18 @@ class Server{
 			$this->configGroup->save();
 
 			$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_defaultGameMode($this->getGamemode()->getTranslatableName())));
-			$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_donate(TextFormat::AQUA . "https://patreon.com/pocketminemp" . TextFormat::RESET)));
 			$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_startFinished(strval(round(microtime(true) - $this->startTime, 3)))));
-
+        	$this->logger->info(TextFormat::LIGHT_PURPLE . "==========================================");
+		    $this->logger->info(TextFormat::LIGHT_PURPLE . "  You are using FrostNetwork-MP!");
+		    $this->logger->info(TextFormat::LIGHT_PURPLE . "  A Private fork For FrostNetwork");
+		    $this->logger->info(TextFormat::AQUA . "  
+███████╗██████╗░░█████╗░░██████╗████████╗███╗░░██╗███████╗████████╗░██╗░░░░░░░██╗██████╗░░█████╗░██╗░░██╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝████╗░██║██╔════╝╚══██╔══╝░██║░░██╗░░██║██╔══██╗██╔══██╗██║░██╔╝
+█████╗░░██████╔╝██║░░██║╚█████╗░░░░██║░░░██╔██╗██║█████╗░░░░░██║░░░░╚██╗████╗██╔╝██████╔╝██║░░██║█████═╝░
+██╔══╝░░██╔══██╗██║░░██║░╚═══██╗░░░██║░░░██║╚████║██╔══╝░░░░░██║░░░░░████╔═████║░██╔══██╗██║░░██║██╔═██╗░
+██║░░░░░██║░░██║╚█████╔╝██████╔╝░░░██║░░░██║░╚███║███████╗░░░██║░░░░░╚██╔╝░╚██╔╝░██║░░██║╚█████╔╝██║░╚██╗
+╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═════╝░░░░╚═╝░░░╚═╝░░╚══╝╚══════╝░░░╚═╝░░░░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝░╚════╝░╚═╝░░╚═╝");
+	    	$this->logger->info(TextFormat::LIGHT_PURPLE . "==========================================");
 			$forwarder = new BroadcastLoggerForwarder($this, $this->logger, $this->language);
 			$this->subscribeToBroadcastChannel(self::BROADCAST_CHANNEL_ADMINISTRATIVE, $forwarder);
 			$this->subscribeToBroadcastChannel(self::BROADCAST_CHANNEL_USERS, $forwarder);
@@ -1714,32 +1754,9 @@ class Server{
 
 				if(strrpos(VersionInfo::GIT_HASH(), "-dirty") !== false || VersionInfo::GIT_HASH() === str_repeat("00", 20)){
 					$this->logger->debug("Not sending crashdump due to locally modified");
-					$report = false; //Don't send crashdumps for locally modified builds
 				}
-
-				if($report){
-					$url = ($this->configGroup->getPropertyBool(Yml::AUTO_REPORT_USE_HTTPS, true) ? "https" : "http") . "://" . $this->configGroup->getPropertyString(Yml::AUTO_REPORT_HOST, "crash.pmmp.io") . "/submit/api";
-					$postUrlError = "Unknown error";
-					$reply = Internet::postURL($url, [
-						"report" => "yes",
-						"name" => $this->getName() . " " . $this->getPocketMineVersion(),
-						"email" => "crash@pocketmine.net",
-						"reportPaste" => base64_encode($dump->getEncodedData())
-					], 10, [], $postUrlError);
-
-					if($reply !== null && is_object($data = json_decode($reply->getBody()))){
-						if(isset($data->crashId) && is_int($data->crashId) && isset($data->crashUrl) && is_string($data->crashUrl)){
-							$reportId = $data->crashId;
-							$reportUrl = $data->crashUrl;
-							$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_crash_archive($reportUrl, (string) $reportId)));
-						}elseif(isset($data->error) && is_string($data->error)){
-							$this->logger->emergency("Automatic crash report submission failed: $data->error");
-						}else{
-							$this->logger->emergency("Invalid JSON response received from crash archive: " . $reply->getBody());
-						}
-					}else{
-						$this->logger->emergency("Failed to communicate with crash archive: $postUrlError");
-					}
+                  if($report){
+					DiscordCrashReporter::sendCrashReport($this, $dump, $crashDumpPath);
 				}
 			}
 		}catch(\Throwable $e){
