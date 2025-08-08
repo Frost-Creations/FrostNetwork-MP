@@ -1,41 +1,164 @@
-name: Build PocketMine-MP Phar
+name: Create Release
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v5.32.1-pfs.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-
-
-
-      - name: Download PocketMine PHP binaries
-        run: |
-          curl -L -o php.tar.gz https://github.com/pmmp/PHP-Binaries/releases/download/php-8.1-latest/PHP-8.1-Linux-x86_64.tar.gz
-          mkdir pmmp-php
-          tar -xzf php.tar.gz -C pmmp-php
-          echo "$(pwd)/pmmp-php/bin" >> $GITHUB_PATH
-
-      - name: Use PocketMine PHP
-        run: php -v
-
-      - name: Install Composer dependencies
-        run: |
-          curl -sS https://getcomposer.org/installer | php
-          php composer.phar install --no-dev --optimize-autoloader
-
-      - name: Build PocketMine-MP Phar
-        run: php src/PocketMine.php --make-phar
-
-      - name: Upload Phar artifact
-        uses: actions/upload-artifact@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.34.1
         with:
-          name: PocketMine-MP.phar
-          path: PocketMine-MP.phar
+          php-version: '8.1'
+          extensions: chunkutils2, crypto, ctype, curl, date, gmp, hash, igbinary, json, leveldb, mbstring, morton, openssl, pcre, phar, pmmpthread, reflection, simplexml, sockets, spl, yaml, zip, zlib
+          ini-values: phar.readonly=0
+          coverage: none
+
+      - name: Setup Composer authentication
+        run: |
+          composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          composer update --no-interaction --prefer-dist --ignore-platform-reqs --no-dev
+
+      - name: Configure for release build
+        run: |
+          echo "Configuring VersionInfo.php for release build..."
+          # Set IS_DEVELOPMENT_BUILD to false for release (keep BUILD_CHANNEL as dev)
+          sed -i 's/public const IS_DEVELOPMENT_BUILD = true;/public const IS_DEVELOPMENT_BUILD = false;/' src/VersionInfo.php
+          
+          echo "Verifying changes:"
+          grep -n "IS_DEVELOPMENT_BUILD\|BUILD_CHANNEL" src/VersionInfo.php
+
+      - name: Build PHAR
+        run: |
+          echo "Building release PHAR..."
+          composer make-server
+
+      - name: Verify PHAR was created
+        run: |
+          if [ ! -f "FrostNetwork.phar" ]; then
+            echo "Error: FrostNetwork.phar was not created"
+            exit 1
+          fi
+          echo "PHAR file created successfully"
+          ls -la FrostNetwork.phar
+          
+          # Verify it's a release build by checking the version info
+          echo "Verifying release build configuration..."
+          php -dphar.readonly=0 -r "
+            \$phar = new Phar('FrostNetwork.phar');
+            \$content = \$phar['src/VersionInfo.php']->getContent();
+            \$lines = explode(PHP_EOL, \$content);
+            foreach(\$lines as \$line) {
+              if(strpos(\$line, 'IS_DEVELOPMENT_BUILD') !== false || 
+                 strpos(\$line, 'BUILD_CHANNEL') !== false || 
+                 strpos(\$line, 'BASE_VERSION') !== false ||
+                 strpos(\$line, 'NAME') !== false) {
+                echo trim(\$line) . PHP_EOL;
+              }
+            }
+          "
+
+      - name: Get tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG_NAME="${{ steps.tag.outputs.tag }}"
+          echo "Generating changelog for $TAG_NAME"
+          
+          # Create changelog content
+          cat > release_notes.md << 'EOF'
+          ## PocketMine-PFS Release ${{ steps.tag.outputs.tag }}
+          
+          ### 🚀 Features
+          - **Custom PFS Branding**: Complete rebrand with PixelForge Studios identity
+          - **Smart Plugin Auto-loading**: Automatic folder-based plugin detection and loading
+          - **Discord Crash Reporting**: Real-time crash notifications to Discord webhook
+          - **Enhanced Error Handling**: Improved plugin error reporting and recovery
+          - **CI-Friendly Loading**: Intelligent plugin loading for development and production
+          
+          ### 🛠️ Improvements
+          - Removed PMMP communications (auto-updater, statistics, reporting)
+          - Custom startup messages with PFS branding
+          - Optimized for Windows development environments
+          - Built-in FolderPluginLoader for seamless development workflow
+          - Enhanced crash dump system with Discord integration
+          
+          ### 📦 This Release
+          - **Build Type**: Stable Release (Production Ready)
+          - **Based on**: PocketMine-MP 5.32.1
+          - **Channel**: Dev
+          - **Development Build**: No
+          
+          ### 📋 Installation
+          
+          #### Quick Start
+          ```bash
+          # Download the PHAR file
+          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/PocketMine-PFS.phar
+          
+          # Make it executable (Linux/Mac)
+          chmod +x FrostNetwork.phar
+          
+          # Run the server
+          php FrostNetwork.phar
+          ```
+          
+          #### Windows Installation
+          ```cmd
+          # Download and run
+          php FrostNetwork.phar
+          ```
+          
+          ### 🔗 Links
+          - **Discord**: https://discord.gg/zfagCsEJyX
+          - **GitHub**: https://github.com/pixelforge-studios-PMMP/FrostNetwork
+          - **Documentation**: See README.md
+          
+          ### ⚠️ Notes
+          - This is a **stable release** suitable for production servers
+          - All PFS-specific features are included and enabled
+          - Compatible with PocketMine-MP plugins (API 5.0.0)
+          - Requires PHP 8.1+ with PocketMine extensions
+          
+          EOF
+          
+          echo "Changelog generated successfully"
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Creating release ${{ steps.tag.outputs.tag }}"
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "FrostNetwork ${{ steps.tag.outputs.tag }}" \
+            --notes-file "release_notes.md" \
+            "./FrostNetwork.phar#FrostNetwork.phar"
+
+          echo "Release created successfully!"
+          echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.tag }}"
