@@ -153,12 +153,13 @@ class Farmland extends Transparent{
 			$ev = new EntityTrampleFarmlandEvent($entity, $this);
 			$ev->call();
 			if(!$ev->isCancelled()){
-		if ($this->position->getWorld()->getFolderName() !== "Hub") {
-			$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
-		     }
-		}
+				if ($this->position->getWorld()->getFolderName() !== "Hub") {
+					$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
+				}
+			}
 			return null;
 		}
+		return 0.0;
 	}
 
 	protected function canHydrate() : bool{
