@@ -157,7 +157,8 @@ class Farmland extends Transparent{
 			$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
 		     }
 		}
-		return null;
+			return null;
+		}
 	}
 
 	protected function canHydrate() : bool{
