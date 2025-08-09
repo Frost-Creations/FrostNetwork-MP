@@ -51,10 +51,7 @@ jobs:
         run: |
           echo "Building release PHAR..."
           composer make-server
-          # Rename output to FrostNetwork.phar if needed
-          if [ -f "PocketMine-MP.phar" ]; then
-            mv PocketMine-MP.phar FrostNetwork.phar
-          fi
+          # Output is now FrostNetwork.phar by default
 
       - name: Verify PHAR was created
         run: |
