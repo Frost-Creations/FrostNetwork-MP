@@ -60,7 +60,10 @@ class VersionCommand extends VanillaCommand{
 				$versionColor . VersionInfo::VERSION()->getFullVersion() . TextFormat::RESET,
 				TextFormat::GREEN . VersionInfo::GIT_HASH() . TextFormat::RESET
 			));
-			$sender->sendMessage(TextFormat::GREEN . "1.20.0 - 1.21.100");
+			$sender->sendMessage(KnownTranslationFactory::pocketmine_command_version_minecraftVersion(
+				TextFormat::GREEN . ProtocolInfo::MINECRAFT_VERSION_NETWORK . TextFormat::RESET,
+				TextFormat::GREEN . "1.20.0 - 1.21.100" . TextFormat::RESET
+			));
 			$sender->sendMessage(KnownTranslationFactory::pocketmine_command_version_phpVersion(TextFormat::GREEN . PHP_VERSION . TextFormat::RESET));
 			$sender->sendMessage(KnownTranslationFactory::pocketmine_command_version_operatingSystem(TextFormat::GREEN . Utils::getOS() . TextFormat::RESET));
 		}else{
