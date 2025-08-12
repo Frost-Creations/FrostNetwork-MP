@@ -130,7 +130,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Filesystem\Path;
 use function array_fill;
 use function array_sum;
-use function base64_encode;
 use function chr;
 use function cli_set_process_title;
 use function copy;
@@ -146,11 +145,8 @@ use function gettype;
 use function ini_set;
 use function is_array;
 use function is_dir;
-use function is_int;
-use function is_object;
 use function is_resource;
 use function is_string;
-use function json_decode;
 use function max;
 use function microtime;
 use function min;
@@ -1119,8 +1115,6 @@ class Server{
 			$this->worldManager->setAutoSave($this->configGroup->getConfigBool(ServerProperties::AUTO_SAVE, $this->worldManager->getAutoSave()));
 			$this->worldManager->setAutoSaveInterval($this->configGroup->getPropertyInt(Yml::TICKS_PER_AUTOSAVE, $this->worldManager->getAutoSaveInterval()));
 
-			//$this->updater = new UpdateChecker($this, $this->configGroup->getPropertyString(Yml::AUTO_UPDATER_HOST, "update.pmmp.io"));
-
 			$this->queryInfo = new QueryInfo($this);
 
 			$this->playerDataProvider = new DatFilePlayerDataProvider(Path::join($this->dataPath, "players"));
@@ -1167,13 +1161,13 @@ class Server{
 			$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_server_startFinished(strval(round(microtime(true) - $this->startTime, 3)))));
         	$this->logger->info(TextFormat::LIGHT_PURPLE . "==========================================");
 		    $this->logger->info(TextFormat::LIGHT_PURPLE . "  You are using FrostNetwork-MP!");
-		    $this->logger->info(TextFormat::AQUA . "  
-            ███████╗██████╗░░█████╗░░██████╗████████╗███╗░░██╗███████╗████████╗░██╗░░░░░░░██╗██████╗░░█████╗░██╗░░██╗
-            ██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝████╗░██║██╔════╝╚══██╔══╝░██║░░██╗░░██║██╔══██╗██╔══██╗██║░██╔╝
-            █████╗░░██████╔╝██║░░██║╚█████╗░░░░██║░░░██╔██╗██║█████╗░░░░░██║░░░░╚██╗████╗██╔╝██████╔╝██║░░██║█████═╝░
-            ██╔══╝░░██╔══██╗██║░░██║░╚═══██╗░░░██║░░░██║╚████║██╔══╝░░░░░██║░░░░░████╔═████║░██╔══██╗██║░░██║██╔═██╗░
-            ██║░░░░░██║░░██║╚█████╔╝██████╔╝░░░██║░░░██║░╚███║███████╗░░░██║░░░░░╚██╔╝░╚██╔╝░██║░░██║╚█████╔╝██║░╚██╗
-            ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═════╝░░░░╚═╝░░░╚═╝░░╚══╝╚══════╝░░░╚═╝░░░░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝░╚════╝░╚═╝░░╚═╝");
+		    $this->logger->info(TextFormat::AQUA . "         
+███████╗██████╗░░█████╗░░██████╗████████╗███╗░░██╗███████╗████████╗░██╗░░░░░░░██╗░█████╗░██████╗░██╗░░██╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝████╗░██║██╔════╝╚══██╔══╝░██║░░██╗░░██║██╔══██╗██╔══██╗██║░██╔╝
+█████╗░░██████╔╝██║░░██║╚█████╗░░░░██║░░░██╔██╗██║█████╗░░░░░██║░░░░╚██╗████╗██╔╝██║░░██║██████╔╝█████═╝░
+██╔══╝░░██╔══██╗██║░░██║░╚═══██╗░░░██║░░░██║╚████║██╔══╝░░░░░██║░░░░░████╔═████║░██║░░██║██╔══██╗██╔═██╗░
+██║░░░░░██║░░██║╚█████╔╝██████╔╝░░░██║░░░██║░╚███║███████╗░░░██║░░░░░╚██╔╝░╚██╔╝░╚█████╔╝██║░░██║██║░╚██╗
+╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═════╝░░░░╚═╝░░░╚═╝░░╚══╝╚══════╝░░░╚═╝░░░░░░╚═╝░░░╚═╝░░░╚════╝░╚═╝░░╚═╝╚═╝░░╚═╝");
 			$this->logger->info(TextFormat::LIGHT_PURPLE . "  A Private fork For FrostNetwork");
 	    	$this->logger->info(TextFormat::LIGHT_PURPLE . "==========================================");
 			$forwarder = new BroadcastLoggerForwarder($this, $this->logger, $this->language);
