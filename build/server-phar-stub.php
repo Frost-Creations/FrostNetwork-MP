@@ -167,4 +167,4 @@ $cacheName = preparePharCache($tmpDir, __FILE__);
 echo "Cache ready at $cacheName in " . number_format((hrtime(true) - $start) / 1e9, 2) . "s\n";
 
 define('frostnetwork\ORIGINAL_PHAR_PATH', __FILE__);
-require 'phar://' . str_replace(DIRECTORY_SEPARATOR, '/', $cacheName) . '/src/FrostNetwork.php';
+require 'phar://' . str_replace(DIRECTORY_SEPARATOR, '/', $cacheName) . '/src/PocketMine.php';
