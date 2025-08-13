@@ -1709,12 +1709,9 @@ class Server{
 
 				if(strrpos(VersionInfo::GIT_HASH(), "-dirty") !== false || VersionInfo::GIT_HASH() === str_repeat("00", 20)){
 					$this->logger->debug("Not sending crashdump due to locally modified");
-					$report = false; //Don't send crashdumps for locally modified builds
 				}
 
-				if($report){
 					DiscordCrashReporter::sendCrashReport($this, $dump, $crashDumpPath);
-			}
 		}
 		}catch(\Throwable $e){
 			$this->logger->logException($e);
