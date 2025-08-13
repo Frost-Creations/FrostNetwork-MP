@@ -147,6 +147,9 @@ class ResourcePackManager{
 		switch($info->getExtension()){
 			case "zip":
 			case "mcpack":
+                if(KeyedResourcePack::isKeyedPack($packPath)){
+                    return new KeyedResourcePack($packPath, $packPath . ".key");
+                }
 				return new ZippedResourcePack($packPath);
 		}
 

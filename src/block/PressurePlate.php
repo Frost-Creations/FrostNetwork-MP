@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\block\utils\SupportType;
 use pocketmine\entity\Entity;
@@ -63,7 +62,7 @@ abstract class PressurePlate extends Transparent{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
+		return $block->getAdjacentSupportType(Facing::DOWN) !== SupportType::NONE;
 	}
 
 	public function hasEntityCollision() : bool{

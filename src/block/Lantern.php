@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\SupportType;
 use pocketmine\data\runtime\RuntimeDataDescriber;
 use pocketmine\item\Item;
@@ -92,6 +91,6 @@ class Lantern extends Transparent{
 	}
 
 	private function canBeSupportedAt(Block $block, int $face) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block, $face);
+		return $block->getAdjacentSupportType($face)->hasCenterSupport();
 	}
 }

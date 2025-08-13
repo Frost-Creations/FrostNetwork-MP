@@ -21,21 +21,33 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\event\block;
+namespace pocketmine\item\enchantment;
 
-use pocketmine\block\Block;
-use pocketmine\event\Cancellable;
-use pocketmine\event\CancellableTrait;
+final class EnchantmentTransfer{
 
-/**
- * Called when a block, such as sand or gravel, is about to fall.
- */
-class BlockFallEvent extends BlockEvent implements Cancellable{
-	use CancellableTrait;
+	private const RARITY_TO_MULTIPLIER = [
+		Rarity::COMMON => 1,
+		Rarity::UNCOMMON => 1,
+		Rarity::RARE => 2,
+		Rarity::MYTHIC => 4,
+	];
+	private const SOURCE_RARITY_TO_MULTIPLIER = [
+		Rarity::COMMON => 1,
+		Rarity::UNCOMMON => 2,
+		Rarity::RARE => 2,
+		Rarity::MYTHIC => 2,
+	];
 
-	public function __construct(
-		Block $block,
-	){
-		parent::__construct($block);
+	private function __construct(){
+		//NOOP
+	}
+
+	public static function getCost(Enchantment $type, int $levelDifference, bool $transferFromItem) : int{
+		$rarity = $type->getRarity();
+		$cost = self::RARITY_TO_MULTIPLIER[$rarity] * $levelDifference;
+		if($transferFromItem){
+			$cost *= self::SOURCE_RARITY_TO_MULTIPLIER[$rarity];
+		}
+		return $cost;
 	}
 }

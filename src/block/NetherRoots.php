@@ -23,13 +23,18 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
+use pocketmine\math\Facing;
 
 final class NetherRoots extends Flowable{
 	use StaticSupportTrait;
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
+		//TODO: nylium, moss
+		$supportBlock = $block->getSide(Facing::DOWN);
+		return
+			$supportBlock->hasTypeTag(BlockTypeTags::DIRT) ||
+			$supportBlock->hasTypeTag(BlockTypeTags::MUD) ||
+			$supportBlock->getTypeId() === BlockTypeIds::SOUL_SOIL;
 	}
 }

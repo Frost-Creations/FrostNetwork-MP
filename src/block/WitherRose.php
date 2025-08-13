@@ -23,18 +23,27 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\entity\effect\EffectInstance;
 use pocketmine\entity\effect\VanillaEffects;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Living;
+use pocketmine\math\Facing;
 
 class WitherRose extends Flowable{
 	use StaticSupportTrait;
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
+		$supportBlock = $block->getSide(Facing::DOWN);
+		return
+			$supportBlock->hasTypeTag(BlockTypeTags::DIRT) ||
+			$supportBlock->hasTypeTag(BlockTypeTags::MUD) ||
+			match($supportBlock->getTypeId()){
+				BlockTypeIds::NETHERRACK,
+				BlockTypeIds::SOUL_SAND,
+				BlockTypeIds::SOUL_SOIL => true,
+				default => false
+			};
 	}
 
 	public function hasEntityCollision() : bool{ return true; }

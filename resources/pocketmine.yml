@@ -6,7 +6,7 @@
 settings:
   #Whether to send all strings translated to server locale or let the device handle them
   force-language: false
-  shutdown-message: "Server closed"
+  shutdown-message: "FrostNetwork Is Currently Offline"
   #Allow listing plugins via Query
   query-plugins: true
   #Enable plugin and core profiling by default
@@ -64,24 +64,13 @@ memory:
     chunk-radius: 4
 
 network:
-  #Threshold for batching packets, in bytes. Only these packets will be compressed
-  #Set to 0 to compress everything, -1 to disable.
-  batch-threshold: 256
-  #Compression level used when sending batched packets. Higher = more CPU, less bandwidth usage
-  compression-level: 6
-  #Use AsyncTasks for compression during the main game session. Increases latency, but may reduce main thread load
-  async-compression: false
-  #Threshold for async compression, in bytes. Only packets larger than this will be compressed asynchronously
-  #Due to large overhead of AsyncTask, async compression isn't worth it except for large packets
-  async-compression-threshold: 10000
-  #Experimental. Use UPnP to automatically port forward
-  upnp-forwarding: false
-  #Maximum size in bytes of packets sent over the network (default 1492 bytes). Packets larger than this will be
-  #fragmented or split into smaller parts. Clients can request MTU sizes up to but not more than this number.
-  max-mtu-size: 1492
-  #Enable encryption of Minecraft network traffic. This has an impact on performance, but prevents hackers from stealing sessions and pretending to be other players.
-  #DO NOT DISABLE THIS unless you understand the risks involved.
-  enable-encryption: true
+  batch-threshold: 128        # Lower threshold to send smaller packets faster
+  compression-level: 4        # Lower compression for less CPU usage, faster networking
+  async-compression: false    # Disable if you have few players or a fast CPU (try both true/false)
+  async-compression-threshold: 10000 # Only compress very large packets asynchronously
+  upnp-forwarding: false      # Only enable if you need automatic port forwarding (usually false for VPS/dedicated)
+  max-mtu-size: 1400          # Lower MTU can help with some network issues (try 1400 or 1200)
+  enable-encryption: true     # Keep enabled for security
 
 debug:
   #If > 1, it will show debug messages in the console
@@ -97,6 +86,9 @@ player:
 level-settings:
   #The default format that worlds will use when created
   default-format: leveldb
+  #The minimum Y level an entity can go before taking damage from the void
+  #Default PM sets this as -80 but NetherGames makes this configurable and the default is 0
+  min-y: 0
 
 chunk-sending:
   #To change server normal render distance, change view-distance in server.properties.
@@ -127,19 +119,14 @@ ticks-per:
 auto-report:
   #Send crash reports for processing
   enabled: true
-  send-code: true
-  send-settings: true
-  send-phpinfo: false
-  use-https: true
-  host: crash.pmmp.io
 
 anonymous-statistics:
   #Sends anonymous statistics for data aggregation, plugin usage tracking
   enabled: false #TODO: re-enable this when we have a new stats host
-  host: stats.pocketmine.net
+  host: stats.frostnetwork.net
 
 auto-updater:
-  enabled: true
+  enabled: false
   on-update:
     warn-console: true
   #Can be development, alpha, beta or stable.

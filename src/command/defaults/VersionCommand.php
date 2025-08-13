@@ -33,6 +33,7 @@ use pocketmine\utils\Utils;
 use pocketmine\VersionInfo;
 use function count;
 use function implode;
+use function sprintf;
 use function stripos;
 use function strtolower;
 use const PHP_VERSION;

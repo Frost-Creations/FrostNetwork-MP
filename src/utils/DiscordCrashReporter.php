@@ -24,7 +24,9 @@ declare(strict_types=1);
 namespace pocketmine\utils;
 
 use pocketmine\crash\CrashDump;
+use pocketmine\crash\CrashDumpData;
 use pocketmine\Server;
+use pocketmine\YmlServerProperties;
 use function array_slice;
 use function basename;
 use function bin2hex;

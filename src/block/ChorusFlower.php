@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace pocketmine\block;
 
 use pocketmine\block\utils\AgeableTrait;
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\entity\projectile\Projectile;
 use pocketmine\event\block\StructureGrowEvent;
@@ -55,7 +54,29 @@ final class ChorusFlower extends Flowable{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
+		$position = $block->position;
+		$world = $position->getWorld();
+		$down = $world->getBlock($position->down());
+
+		if($down->getTypeId() === BlockTypeIds::END_STONE || $down->getTypeId() === BlockTypeIds::CHORUS_PLANT){
+			return true;
+		}
+
+		$plantAdjacent = false;
+		foreach($position->sidesAroundAxis(Axis::Y) as $sidePosition){
+			$block = $world->getBlock($sidePosition);
+
+			if($block->getTypeId() === BlockTypeIds::CHORUS_PLANT){
+				if($plantAdjacent){ //at most one plant may be horizontally adjacent
+					return false;
+				}
+				$plantAdjacent = true;
+			}elseif($block->getTypeId() !== BlockTypeIds::AIR){
+				return false;
+			}
+		}
+
+		return $plantAdjacent;
 	}
 
 	public function onProjectileHit(Projectile $projectile, RayTraceResult $hitResult) : void{

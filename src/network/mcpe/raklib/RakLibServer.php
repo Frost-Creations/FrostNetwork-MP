@@ -68,17 +68,17 @@ class RakLibServer extends Thread{
 	public function startAndWait(int $options = NativeThread::INHERIT_NONE) : void{
 		$this->start($options);
 		$this->synchronized(function() : void{
-			while(!$this->ready && !$this->isTerminated()){
+			while(!$this->ready && $this->getCrashInfo() === null){
 				$this->wait();
 			}
-		});
-		$crashInfo = $this->getCrashInfo();
-		if($crashInfo !== null){
-			if($crashInfo->getType() === SocketException::class){
-				throw new SocketException($crashInfo->getMessage());
+			$crashInfo = $this->getCrashInfo();
+			if($crashInfo !== null){
+				if($crashInfo->getType() === SocketException::class){
+					throw new SocketException($crashInfo->getMessage());
+				}
+				throw new ThreadCrashException("RakLib failed to start", $crashInfo);
 			}
-			throw new ThreadCrashException("RakLib failed to start", $crashInfo);
-		}
+		});
 	}
 
 	protected function onRun() : void{

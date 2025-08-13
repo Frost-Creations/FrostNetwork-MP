@@ -25,7 +25,6 @@ namespace pocketmine\block;
 
 use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\BlockEventHelper;
-use pocketmine\block\utils\BlockSupportRegistry;
 use pocketmine\block\utils\StaticSupportTrait;
 use pocketmine\block\utils\SupportType;
 use pocketmine\entity\Entity;
@@ -60,7 +59,17 @@ class Cactus extends Transparent{
 	}
 
 	private function canBeSupportedAt(Block $block) : bool{
-		return BlockSupportRegistry::getInstance()->isTypeSupported($this, $block);
+		$supportBlock = $block->getSide(Facing::DOWN);
+		if(!$supportBlock->hasSameTypeId($this) && !$supportBlock->hasTypeTag(BlockTypeTags::SAND)){
+			return false;
+		}
+		foreach(Facing::HORIZONTAL as $side){
+			if($block->getSide($side)->isSolid()){
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public function ticksRandomly() : bool{
