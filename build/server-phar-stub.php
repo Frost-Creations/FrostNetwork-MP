@@ -56,7 +56,7 @@ function preparePharCacheDirectory() : string{
 
 	$i = 0;
 	do{
-		$tmpPath = sys_get_temp_dir() . '/FrostNetwork-phar-cache.' . $i;
+		$tmpPath = sys_get_temp_dir() . '/FrostNetwork.' . $i;
 		$i++;
 	}while(is_file($tmpPath));
 	if(!@mkdir($tmpPath) && !is_dir($tmpPath)){
