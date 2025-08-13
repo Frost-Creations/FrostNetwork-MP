@@ -29,7 +29,6 @@ namespace pocketmine\entity;
 use pocketmine\block\Block;
 use pocketmine\block\Water;
 use pocketmine\entity\animation\Animation;
-use pocketmine\entity\animation\ItemAnimation;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityDespawnEvent;
 use pocketmine\event\entity\EntityExtinguishEvent;
@@ -47,7 +46,6 @@ use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\FloatTag;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\EntityEventBroadcaster;
 use pocketmine\network\mcpe\NetworkBroadcastUtils;
 use pocketmine\network\mcpe\protocol\AddActorPacket;
@@ -663,7 +661,7 @@ abstract class Entity{
 		}
 		$this->checkBlockIntersectionsNextTick = true;
 
-		if($this->location->y <= $this->getWorld()->getDamageY() && $this->isAlive()){
+		if($this->location->y <= World::Y_MIN - 16 && $this->isAlive()){
 			$ev = new EntityDamageEvent($this, EntityDamageEvent::CAUSE_VOID, 10);
 			$this->attack($ev);
 			$hasUpdate = true;
@@ -1510,7 +1508,7 @@ abstract class Entity{
 		return $this->hasSpawned;
 	}
 
-	abstract public static function getNetworkTypeId() : string;
+	abstract public function getNetworkTypeId() : string;
 
 	/**
 	 * Called by spawnTo() to send whatever packets needed to spawn the entity to the client.
@@ -1519,7 +1517,7 @@ abstract class Entity{
 		$player->getNetworkSession()->sendDataPacket(AddActorPacket::create(
 			$this->getId(), //TODO: actor unique ID
 			$this->getId(),
-			static::getNetworkTypeId(),
+			$this->getNetworkTypeId(),
 			$this->getOffsetPosition($this->location->asVector3()),
 			$this->getMotion(),
 			$this->location->pitch,
@@ -1670,10 +1668,6 @@ abstract class Entity{
 		NetworkBroadcastUtils::broadcastEntityEvent($targets, fn(EntityEventBroadcaster $broadcaster, array $recipients) => $broadcaster->syncActorData($recipients, $this, $data));
 	}
 
-	public function isValid() : bool{
-		return $this->location->isValid();
-	}
-
 	/**
 	 * @return MetadataProperty[]
 	 * @phpstan-return array<int, MetadataProperty>
@@ -1725,16 +1719,7 @@ abstract class Entity{
 	 * @param Player[]|null $targets
 	 */
 	public function broadcastAnimation(Animation $animation, ?array $targets = null) : void{
-		$targets = $targets ?? $this->getViewers();
-
-		if($animation instanceof ItemAnimation){
-			TypeConverter::broadcastByTypeConverter($targets, function(TypeConverter $typeConverter) use ($animation) : array{
-				$animation->setItemTranslator($typeConverter->getItemTranslator());
-				return $animation->encode();
-			});
-		}else{
-			NetworkBroadcastUtils::broadcastPackets($targets, $animation->encode());
-		}
+		NetworkBroadcastUtils::broadcastPackets($targets ?? $this->getViewers(), $animation->encode());
 	}
 
 	/**

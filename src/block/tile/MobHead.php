@@ -28,7 +28,6 @@ use pocketmine\data\bedrock\MobHeadTypeIdMap;
 use pocketmine\data\SavedDataLoadingException;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\convert\TypeConverter;
 
 /**
  * @deprecated
@@ -79,7 +78,7 @@ class MobHead extends Spawnable{
 		$this->rotation = $rotation;
 	}
 
-	protected function addAdditionalSpawnData(CompoundTag $nbt, TypeConverter $typeConverter) : void{
+	protected function addAdditionalSpawnData(CompoundTag $nbt) : void{
 		$nbt->setByte(self::TAG_SKULL_TYPE, MobHeadTypeIdMap::getInstance()->toId($this->mobHeadType));
 		$nbt->setByte(self::TAG_ROT, $this->rotation);
 	}

@@ -29,7 +29,6 @@ use pocketmine\nbt\NbtDataException;
 use pocketmine\nbt\TreeRoot;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
 use pocketmine\utils\Utils;
-use pocketmine\world\format\io\GlobalBlockStateHandlers;
 use function array_key_first;
 use function array_map;
 use function count;
@@ -77,20 +76,6 @@ final class BlockStateDictionary{
 				$this->stateDataToStateIdLookup[$name] = $stateIds;
 			}
 		}
-
-		$standardSkull = $this->stateDataToStateIdLookup[BlockTypeNames::SKELETON_SKULL];
-		foreach([
-			BlockTypeNames::WITHER_SKELETON_SKULL,
-			BlockTypeNames::ZOMBIE_HEAD,
-			BlockTypeNames::PLAYER_HEAD,
-			BlockTypeNames::CREEPER_HEAD,
-			BlockTypeNames::DRAGON_HEAD,
-			BlockTypeNames::PIGLIN_HEAD
-		] as $skull){
-			if(!isset($this->stateDataToStateIdLookup[$skull])){
-				$this->stateDataToStateIdLookup[$skull] = $standardSkull;
-			}
-		}
 	}
 
 	/**
@@ -122,10 +107,6 @@ final class BlockStateDictionary{
 
 	public function generateDataFromStateId(int $networkRuntimeId) : ?BlockStateData{
 		return ($this->states[$networkRuntimeId] ?? null)?->generateStateData();
-	}
-
-	public function generateCurrentDataFromStateId(int $networkRuntimeId) : ?BlockStateData{
-		return ($this->states[$networkRuntimeId] ?? null)?->generateCurrentStateData();
 	}
 
 	/**
@@ -185,7 +166,6 @@ final class BlockStateDictionary{
 	}
 
 	public static function loadFromString(string $blockPaletteContents, string $metaMapContents) : self{
-		$upgrader = GlobalBlockStateHandlers::getUpgrader()->getBlockStateUpgrader();
 		$metaMap = json_decode($metaMapContents, flags: JSON_THROW_ON_ERROR);
 		if(!is_array($metaMap)){
 			throw new \InvalidArgumentException("Invalid metaMap, expected array for root type, got " . get_debug_type($metaMap));
@@ -211,9 +191,8 @@ final class BlockStateDictionary{
 			if(!is_int($meta)){
 				throw new \InvalidArgumentException("Invalid metaMap offset $i, expected int, got " . get_debug_type($meta));
 			}
-			$newState = $upgrader->upgrade($state);
-			$uniqueName = $uniqueNames[$newState->getName()] ??= $newState->getName();
-			$entries[$i] = new BlockStateDictionaryEntry($uniqueName, $newState->getStates(), $meta, $newState->equals($state) ? null : $state);
+			$uniqueName = $uniqueNames[$state->getName()] ??= $state->getName();
+			$entries[$i] = new BlockStateDictionaryEntry($uniqueName, $state->getStates(), $meta);
 		}
 
 		return new self($entries);

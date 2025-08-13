@@ -164,13 +164,16 @@ trait CommonThreadPartsTrait{
 			if($this->isTerminated() && $this->crashInfo === null){
 				$last = error_get_last();
 				if($last !== null && ($last["type"] & CrashDump::FATAL_ERROR_MASK) !== 0){
+					//fatal error
 					$crashInfo = ThreadCrashInfo::fromLastErrorInfo($last, $this->getThreadName());
 				}else{
+					//probably misused exit()
 					$crashInfo = ThreadCrashInfo::fromThrowable(new \RuntimeException("Thread crashed without an error - perhaps exit() was called?"), $this->getThreadName());
 				}
 				$this->crashInfo = $crashInfo;
 
 				$lines = [];
+				//mimic exception printed format
 				$lines[] = "Fatal error: " . $crashInfo->makePrettyMessage();
 				$lines[] = "--- Stack trace ---";
 				foreach($crashInfo->getTrace() as $frame){

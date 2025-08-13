@@ -56,7 +56,7 @@ function preparePharCacheDirectory() : string{
 
 	$i = 0;
 	do{
-		$tmpPath = sys_get_temp_dir() . '/FrostNetwork-MP-phar-cache.' . $i;
+		$tmpPath = sys_get_temp_dir() . '/FrostNetwork-phar-cache.' . $i;
 		$i++;
 	}while(is_file($tmpPath));
 	if(!@mkdir($tmpPath) && !is_dir($tmpPath)){
@@ -161,10 +161,10 @@ function preparePharCache(string $tmpPath, string $pharPath) : string{
 
 $tmpDir = preparePharCacheDirectory();
 cleanupPharCache($tmpDir);
-echo "Preparing FrostNetwork-MP.phar decompressed cache...\n";
+echo "Preparing FrostNetwork.phar decompressed cache...\n";
 $start = hrtime(true);
 $cacheName = preparePharCache($tmpDir, __FILE__);
 echo "Cache ready at $cacheName in " . number_format((hrtime(true) - $start) / 1e9, 2) . "s\n";
 
-define('pocketmine\ORIGINAL_PHAR_PATH', __FILE__);
-require 'phar://' . str_replace(DIRECTORY_SEPARATOR, '/', $cacheName) . '/src/PocketMine.php';
+define('frostnetwork\ORIGINAL_PHAR_PATH', __FILE__);
+require 'phar://' . str_replace(DIRECTORY_SEPARATOR, '/', $cacheName) . '/src/FrostNetwork.php';

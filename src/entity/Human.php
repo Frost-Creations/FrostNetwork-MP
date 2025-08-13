@@ -99,7 +99,7 @@ class Human extends Living implements ProjectileSource, InventoryHolder{
 	private const TAG_SKIN_GEOMETRY_NAME = "GeometryName"; //TAG_String
 	private const TAG_SKIN_GEOMETRY_DATA = "GeometryData"; //TAG_ByteArray
 
-	public static function getNetworkTypeId() : string{ return EntityIds::PLAYER; }
+	public function getNetworkTypeId() : string{ return EntityIds::PLAYER; }
 
 	protected PlayerInventory $inventory;
 	protected PlayerOffHandInventory $offHandInventory;
@@ -165,11 +165,9 @@ class Human extends Living implements ProjectileSource, InventoryHolder{
 	 * @param Player[]|null $targets
 	 */
 	public function sendSkin(?array $targets = null) : void{
-		TypeConverter::broadcastByTypeConverter($targets ?? $this->hasSpawned, function(TypeConverter $typeConverter) : array{
-			return [
-				PlayerSkinPacket::create($this->getUniqueId(), "", "", $typeConverter->getSkinAdapter()->toSkinData($this->skin))
-			];
-		});
+		NetworkBroadcastUtils::broadcastPackets($targets ?? $this->hasSpawned, [
+			PlayerSkinPacket::create($this->getUniqueId(), "", "", TypeConverter::getInstance()->getSkinAdapter()->toSkinData($this->skin))
+		]);
 	}
 
 	public function jump() : void{

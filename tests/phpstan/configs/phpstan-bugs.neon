@@ -257,3 +257,4 @@ parameters:
 			identifier: identical.alwaysTrue
 			count: 1
 			path: ../rules/UnsafeForeachArrayWithStringKeysRule.php
+

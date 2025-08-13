@@ -201,7 +201,7 @@ class Chunk{
 
 		$pos = $tile->getPosition();
 		if(isset($this->tiles[$index = Chunk::blockHash($pos->x, $pos->y, $pos->z)]) && $this->tiles[$index] !== $tile){
-			$this->tiles[$index]->close(); // close the previous tile
+			throw new \InvalidArgumentException("Another tile is already at this location");
 		}
 		$this->tiles[$index] = $tile;
 	}

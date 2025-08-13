@@ -100,10 +100,8 @@ class Farmland extends Transparent{
 
 	public function onNearbyBlockChange() : void{
 		if($this->getSide(Facing::UP)->isSolid()){
-			if ($this->position->getWorld()->getFolderName() !== "Hub") {
 			$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
 		}
-	  }
 	}
 
 	public function ticksRandomly() : bool{
@@ -127,11 +125,9 @@ class Farmland extends Transparent{
 					$changed = true;
 				}
 			}else{
-			if ($this->position->getWorld()->getFolderName() !== "Hub") {
 				$world->setBlock($this->position, VanillaBlocks::DIRT());
 				$changed = true;
 			}
-		}
 		}elseif($this->wetness < self::MAX_WETNESS){
 			$event = new FarmlandHydrationChangeEvent($this, $this->wetness, self::MAX_WETNESS);
 			$event->call();
@@ -153,13 +149,10 @@ class Farmland extends Transparent{
 			$ev = new EntityTrampleFarmlandEvent($entity, $this);
 			$ev->call();
 			if(!$ev->isCancelled()){
-				if ($this->position->getWorld()->getFolderName() !== "Hub") {
-					$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
-				}
+				$this->position->getWorld()->setBlock($this->position, VanillaBlocks::DIRT());
 			}
-			return null;
 		}
-		return 0.0;
+		return null;
 	}
 
 	protected function canHydrate() : bool{

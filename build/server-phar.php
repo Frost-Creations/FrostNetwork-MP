@@ -157,7 +157,7 @@ function main() : void{
 		}
 		$pharPath = $opts["out"];
 	}else{
-		$pharPath = getcwd() . DIRECTORY_SEPARATOR . "FrostNetwork.phar";
+		$pharPath = getcwd() . DIRECTORY_SEPARATOR . "FrostNetwork-MP.phar";
 	}
 	foreach(buildPhar(
 		$pharPath,

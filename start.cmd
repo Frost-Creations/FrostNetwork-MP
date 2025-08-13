@@ -1,5 +1,5 @@
 @echo off
-TITLE FrostNetwork server software for Minecraft: Bedrock Edition
+TITLE FrostNetwork-MP server software for Minecraft: Bedrock Edition
 cd /d %~dp0
 
 set PHP_BINARY=
@@ -22,10 +22,10 @@ if "%PHP_BINARY%"=="" (
 	exit 1
 )
 
-if exist FrostNetwork.phar (
-	set POCKETMINE_FILE=FrostNetwork.phar
+if exist FrostNetwork-MP.phar (
+	set POCKETMINE_FILE=FrostNetwork-MP.phar
 ) else (
-	echo FrostNetwork.phar not found
+	echo FrostNetwork-MP.phar not found
 	echo Downloads can be found at https://github.com/pmmp/PocketMine-MP/releases
 	pause
 	exit 1

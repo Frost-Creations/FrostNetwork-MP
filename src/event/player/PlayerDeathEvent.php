@@ -26,7 +26,6 @@ namespace pocketmine\event\player;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\entity\Living;
 use pocketmine\entity\object\FallingBlock;
-use pocketmine\entity\object\FireworkRocket;
 use pocketmine\event\entity\EntityDamageByBlockEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -158,9 +157,7 @@ class PlayerDeathEvent extends EntityDeathEvent{
 			case EntityDamageEvent::CAUSE_ENTITY_EXPLOSION:
 				if($deathCause instanceof EntityDamageByEntityEvent){
 					$e = $deathCause->getDamager();
-					if($e instanceof FireworkRocket){
-						return KnownTranslationFactory::death_attack_fireworks($name);
-					}elseif($e instanceof Living){
+					if($e instanceof Living){
 						return KnownTranslationFactory::death_attack_explosion_player($name, $e->getDisplayName());
 					}
 				}

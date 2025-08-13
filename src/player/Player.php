@@ -328,7 +328,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 		$this->locale = $this->playerInfo->getLocale();
 
 		$this->uuid = $this->playerInfo->getUuid();
-		$this->xuid = $this->playerInfo instanceof XboxLivePlayerInfo ? $this->playerInfo->getXuid() : "";
+		$this->xuid = $this->playerInfo instanceof XboxLivePlayerInfo ? $this->playerInfo->getXuid() : $session->getXuid();
 
 		$this->creativeInventory = CreativeInventory::getInstance();
 
@@ -609,7 +609,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 			return;
 		}
 		unset($this->hiddenPlayers[$player->getUniqueId()->getBytes()]);
-		if($player->isOnline()){
+		if($player->isConnected()){
 			$player->spawnTo($this);
 		}
 	}
@@ -1991,9 +1991,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 
 		$soundPos = $entity->getPosition()->add(0, $entity->size->getHeight() / 2, 0);
 		if($ev->isCancelled()){
-			if(!$this->isSilent() && !$this->isAdventure()){
-				$this->getWorld()->addSound($soundPos, new EntityAttackNoDamageSound());
-			}
+			$this->getWorld()->addSound($soundPos, new EntityAttackNoDamageSound());
 			return false;
 		}
 		$this->getWorld()->addSound($soundPos, new EntityAttackSound());
@@ -2103,10 +2101,6 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 		}
 		$this->setFlying($fly);
 		return true;
-	}
-
-	public function toggleCrawl(bool $crawl) : bool{
-		return false;
 	}
 
 	public function toggleGlide(bool $glide) : bool{

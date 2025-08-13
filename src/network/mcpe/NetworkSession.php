@@ -26,7 +26,6 @@ namespace pocketmine\network\mcpe;
 use pocketmine\entity\effect\EffectInstance;
 use pocketmine\event\player\PlayerDuplicateLoginEvent;
 use pocketmine\event\player\PlayerResourcePackOfferEvent;
-use pocketmine\event\player\SessionDisconnectEvent;
 use pocketmine\event\server\DataPacketDecodeEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
@@ -150,14 +149,14 @@ class NetworkSession{
 
 	private \PrefixedLogger $logger;
 	private ?Player $player = null;
-	protected ?PlayerInfo $info = null;
+	private ?PlayerInfo $info = null;
 	private ?int $ping = null;
 
 	private ?PacketHandler $handler = null;
 
 	private bool $connected = true;
 	private bool $disconnectGuard = false;
-	protected bool $loggedIn = false;
+	private bool $loggedIn = false;
 	private bool $authenticated = false;
 	private int $connectTime;
 	private ?CompoundTag $cachedOfflinePlayerData = null;
@@ -178,8 +177,7 @@ class NetworkSession{
 	/** @phpstan-var \SplQueue<array{CompressBatchPromise|string, list<PromiseResolver<true>>, bool}> */
 	private \SplQueue $compressedQueue;
 	private bool $forceAsyncCompression = true;
-	private ?int $protocolId = null;
-	protected bool $enableCompression = false; //disabled until handshake completed
+	private bool $enableCompression = false; //disabled until handshake completed
 
 	private int $nextAckReceiptId = 0;
 	/**
@@ -196,11 +194,13 @@ class NetworkSession{
 	 */
 	private ObjectSet $disposeHooks;
 
+	private string $xuid = "";
+
 	public function __construct(
 		private Server $server,
 		private NetworkSessionManager $manager,
 		private PacketPool $packetPool,
-		protected PacketSender $sender,
+		private PacketSender $sender,
 		private PacketBroadcaster $broadcaster,
 		private EntityEventBroadcaster $entityEventBroadcaster,
 		private Compressor $compressor,
@@ -325,6 +325,10 @@ class NetworkSession{
 		return $this->info !== null ? $this->info->getUsername() : $this->ip . " " . $this->port;
 	}
 
+	public function getXuid() : string{
+		return $this->xuid;
+	}
+
 	/**
 	 * Returns the last recorded ping measurement for this session, in milliseconds, or null if a ping measurement has not yet been recorded.
 	 */
@@ -350,26 +354,6 @@ class NetworkSession{
 				$this->handler->setUp();
 			}
 		}
-	}
-
-	public function setProtocolId(int $protocolId) : void{
-		$this->protocolId = $protocolId;
-
-		$this->typeConverter = TypeConverter::getInstance($protocolId);
-		$this->broadcaster = $this->server->getPacketBroadcaster($protocolId);
-		$this->entityEventBroadcaster = $this->server->getEntityEventBroadcaster($this->broadcaster, $this->typeConverter);
-	}
-
-	public function getProtocolId() : int{
-		return $this->protocolId ?? ProtocolInfo::CURRENT_PROTOCOL;
-	}
-
-	/**
-	 * @return \Closure[]|ObjectSet
-	 * @phpstan-return ObjectSet<\Closure() : void>
-	 */
-	public function getDisposeHooks() : ObjectSet{
-		return $this->disposeHooks;
 	}
 
 	/**
@@ -401,34 +385,22 @@ class NetworkSession{
 			}
 
 			if($this->enableCompression){
-				if($this->protocolId >= ProtocolInfo::PROTOCOL_1_20_60){
-					$compressionType = ord($payload[0]);
-					$compressed = substr($payload, 1);
-					if($compressionType === CompressionAlgorithm::NONE){
-						$decompressed = $compressed;
-					}elseif($compressionType === $this->compressor->getNetworkId()){
-						try{
-							Timings::$playerNetworkReceiveDecompress->startTiming();
-							$decompressed = $this->compressor->decompress($compressed);
-						}catch(DecompressionException $e){
-							$this->logger->debug("Failed to decompress packet: " . base64_encode($compressed));
-							throw PacketHandlingException::wrap($e, "Compressed packet batch decode error");
-						}finally{
-							Timings::$playerNetworkReceiveDecompress->stopTiming();
-						}
-					}else{
-						throw new PacketHandlingException("Packet compressed with unexpected compression type $compressionType");
-					}
-				}else{
+				$compressionType = ord($payload[0]);
+				$compressed = substr($payload, 1);
+				if($compressionType === CompressionAlgorithm::NONE){
+					$decompressed = $compressed;
+				}elseif($compressionType === $this->compressor->getNetworkId()){
+					Timings::$playerNetworkReceiveDecompress->startTiming();
 					try{
-						Timings::$playerNetworkReceiveDecompress->startTiming();
-						$decompressed = $this->compressor->decompress($payload);
+						$decompressed = $this->compressor->decompress($compressed);
 					}catch(DecompressionException $e){
-						$this->logger->debug("Failed to decompress packet: " . base64_encode($payload));
+						$this->logger->debug("Failed to decompress packet: " . base64_encode($compressed));
 						throw PacketHandlingException::wrap($e, "Compressed packet batch decode error");
 					}finally{
 						Timings::$playerNetworkReceiveDecompress->stopTiming();
 					}
+				}else{
+					throw new PacketHandlingException("Packet compressed with unexpected compression type $compressionType");
 				}
 			}else{
 				$decompressed = $payload;
@@ -482,7 +454,7 @@ class NetworkSession{
 			$decodeTimings = Timings::getDecodeDataPacketTimings($packet);
 			$decodeTimings->startTiming();
 			try{
-				$stream = PacketSerializer::decoder($this->getProtocolId(), $buffer, 0);
+				$stream = PacketSerializer::decoder($buffer, 0);
 				try{
 					$packet->decode($stream);
 				}catch(PacketDecodeException $e){
@@ -560,7 +532,7 @@ class NetworkSession{
 				$this->sendBufferAckPromises[] = $ackReceiptResolver;
 			}
 			foreach($packets as $evPacket){
-				$this->addToSendBuffer(self::encodePacketTimed(PacketSerializer::encoder($this->getProtocolId()), $evPacket));
+				$this->addToSendBuffer(self::encodePacketTimed(PacketSerializer::encoder(), $evPacket));
 			}
 			if($immediate){
 				$this->flushGamePacketQueue();
@@ -624,7 +596,7 @@ class NetworkSession{
 				PacketBatch::encodeRaw($stream, $this->sendBuffer);
 
 				if($this->enableCompression){
-					$batch = $this->server->prepareBatch($stream->getBuffer(), $this->getProtocolId(), $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
+					$batch = $this->server->prepareBatch($stream->getBuffer(), $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
 				}else{
 					$batch = $stream->getBuffer();
 				}
@@ -736,10 +708,6 @@ class NetworkSession{
 		if($this->connected && !$this->disconnectGuard){
 			$this->disconnectGuard = true;
 			$func();
-
-			$event = new SessionDisconnectEvent($this);
-			$event->call();
-
 			$this->disconnectGuard = false;
 			$this->flushGamePacketQueue();
 			$this->sender->close("");
@@ -1150,7 +1118,7 @@ class NetworkSession{
 				0,
 				$aliasObj,
 				[
-					new CommandOverload(chaining: false, parameters: [CommandParameter::standard("args", AvailableCommandsPacket::convertArg($this->getProtocolId(), AvailableCommandsPacket::ARG_TYPE_RAWTEXT), 0, true)])
+					new CommandOverload(chaining: false, parameters: [CommandParameter::standard("args", AvailableCommandsPacket::ARG_TYPE_RAWTEXT, 0, true)])
 				],
 				chainedSubCommandData: []
 			);
@@ -1232,7 +1200,7 @@ class NetworkSession{
 	 */
 	public function startUsingChunk(int $chunkX, int $chunkZ, \Closure $onCompletion) : void{
 		$world = $this->player->getLocation()->getWorld();
-		$promiseOrPacket = ChunkCache::getInstance($world, $this->compressor)->request($chunkX, $chunkZ, $this->getTypeConverter());
+		$promiseOrPacket = ChunkCache::getInstance($world, $this->compressor)->request($chunkX, $chunkZ);
 		if(is_string($promiseOrPacket)){
 			$this->sendChunkPacket($promiseOrPacket, $onCompletion, $world);
 			return;

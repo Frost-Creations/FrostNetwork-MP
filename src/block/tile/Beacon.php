@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace pocketmine\block\tile;
 
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\convert\TypeConverter;
 
 final class Beacon extends Spawnable{
 	private const TAG_PRIMARY = "primary"; //TAG_Int
@@ -33,7 +32,7 @@ final class Beacon extends Spawnable{
 	private int $primaryEffect = 0;
 	private int $secondaryEffect = 0;
 
-	protected function addAdditionalSpawnData(CompoundTag $nbt, TypeConverter $typeConverter) : void{
+	protected function addAdditionalSpawnData(CompoundTag $nbt) : void{
 		$nbt->setInt(self::TAG_PRIMARY, $this->primaryEffect);
 		$nbt->setInt(self::TAG_SECONDARY, $this->secondaryEffect);
 	}

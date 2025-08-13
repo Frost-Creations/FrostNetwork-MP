@@ -33,7 +33,6 @@ use pocketmine\item\Item;
 use pocketmine\item\VanillaItems;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\protocol\ContainerSetDataPacket;
 use pocketmine\player\Player;
 use pocketmine\world\sound\PotionFinishBrewingSound;
@@ -93,8 +92,8 @@ class BrewingStand extends Spawnable implements Container, Nameable{
 		$nbt->setShort(self::TAG_REMAINING_FUEL_TIME_PE, $this->remainingFuelTime);
 	}
 
-	protected function addAdditionalSpawnData(CompoundTag $nbt, TypeConverter $typeConverter) : void{
-		$this->addNameSpawnData($nbt, $typeConverter);
+	protected function addAdditionalSpawnData(CompoundTag $nbt) : void{
+		$this->addNameSpawnData($nbt);
 
 		$nbt->setShort(self::TAG_BREW_TIME_PE, $this->brewTime);
 		$nbt->setShort(self::TAG_MAX_FUEL_TIME, $this->maxFuelTime);

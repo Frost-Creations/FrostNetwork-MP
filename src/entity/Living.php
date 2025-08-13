@@ -132,6 +132,7 @@ abstract class Living extends Entity{
 	protected bool $sneaking = false;
 	protected bool $gliding = false;
 	protected bool $swimming = false;
+	protected bool $switching = false;
 
 	private ?int $frostWalkerLevel = null;
 
@@ -264,6 +265,14 @@ abstract class Living extends Entity{
 			$this->setMovementSpeed($value ? ($moveSpeed * 1.3) : ($moveSpeed / 1.3));
 			$this->moveSpeedAttr->markSynchronized(false); //TODO: reevaluate this hack
 		}
+	}
+
+	public function setSwitching(bool $value = true) : void{
+		$this->switching = $value;
+	}
+
+	public function isSwitchingEnabled() : bool{
+		return $this->switching;
 	}
 
 	public function isGliding() : bool{
@@ -572,9 +581,7 @@ abstract class Living extends Entity{
 			return;
 		}
 
-		if($this->attackTime <= 0){
-			//this logic only applies if the entity was cold attacked
-
+		if ($this->isSwitchingEnabled()){
 			$this->attackTime = $source->getAttackCooldown();
 
 			if($source instanceof EntityDamageByChildEntityEvent){
@@ -593,12 +600,38 @@ abstract class Living extends Entity{
 			}
 
 			if($this->isAlive()){
+				$this->applyPostDamageEffects($source);
 				$this->doHitAnimation();
 			}
-		}
+		} else {
+			if($this->attackTime <= 0){
+				//this logic only applies if the entity was cold attacked
 
-		if($this->isAlive()){
-			$this->applyPostDamageEffects($source);
+				$this->attackTime = $source->getAttackCooldown();
+
+				if($source instanceof EntityDamageByChildEntityEvent){
+					$e = $source->getChild();
+					if($e !== null){
+						$motion = $e->getMotion();
+						$this->knockBack($motion->x, $motion->z, $source->getKnockBack(), $source->getVerticalKnockBackLimit());
+					}
+				}elseif($source instanceof EntityDamageByEntityEvent){
+					$e = $source->getDamager();
+					if($e !== null){
+						$deltaX = $this->location->x - $e->location->x;
+						$deltaZ = $this->location->z - $e->location->z;
+						$this->knockBack($deltaX, $deltaZ, $source->getKnockBack(), $source->getVerticalKnockBackLimit());
+					}
+				}
+
+				if($this->isAlive()){
+					$this->doHitAnimation();
+				}
+			}
+
+			if($this->isAlive()){
+				$this->applyPostDamageEffects($source);
+			}
 		}
 	}
 
@@ -952,11 +985,6 @@ abstract class Living extends Entity{
 	protected function syncNetworkData(EntityMetadataCollection $properties) : void{
 		parent::syncNetworkData($properties);
 
-		//Keep sending pre-1.21 bubbles potion color cuz multi-version
-		$properties->setByte(EntityMetadataProperties::POTION_AMBIENT, $this->effectManager->hasOnlyAmbientEffects() ? 1 : 0);
-		$properties->setInt(EntityMetadataProperties::POTION_COLOR, Binary::signInt($this->effectManager->getBubbleColor()->toARGB()));
-
-		//1.21+: send first 8 visible effects to display effect bubbles
 		$visibleEffects = [];
 		foreach ($this->effectManager->all() as $effect) {
 			if (!$effect->isVisible() || !$effect->getType()->hasBubbles()) {
