@@ -1724,9 +1724,10 @@ class Server{
 		}
 
 		$this->isRunning = false;
+		$this->forceShutdown();
 
 		//Force minimum uptime to be >= 120 seconds, to reduce the impact of spammy crash loops
-	/*	$uptime = time() - ((int) $this->startTime);
+	$uptime = time() - ((int) $this->startTime);
 		$minUptime = 120;
 		$spacing = $minUptime - $uptime;
 		if($spacing > 0){
@@ -1734,7 +1735,7 @@ class Server{
 			sleep($spacing);
 		}
 		@Process::kill(Process::pid());
-		exit(1);*/
+		exit(1);
 	}
 
 	/**
