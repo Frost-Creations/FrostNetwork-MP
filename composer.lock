@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e35a2d1995c7fcf59b25d13dd5e4dbd9",
+    "content-hash": "dd5d667ec0ceecbc9f9d41fbd80ac5d8",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -127,16 +127,16 @@
         },
         {
             "name": "cheprasov/php-redis-client",
-            "version": "1.10.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/cheprasov/php-redis-client.git",
-                "reference": "c3594e0bbc8ee1bc2c11c889ce5dfa0d3b8a6f9a"
+                "url": "https://github.com/GabBiswajit/php-redis-client.git",
+                "reference": "5c25517d4eb65997571595248861c56e1d656b7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cheprasov/php-redis-client/zipball/c3594e0bbc8ee1bc2c11c889ce5dfa0d3b8a6f9a",
-                "reference": "c3594e0bbc8ee1bc2c11c889ce5dfa0d3b8a6f9a",
+                "url": "https://api.github.com/repos/GabBiswajit/php-redis-client/zipball/5c25517d4eb65997571595248861c56e1d656b7a",
+                "reference": "5c25517d4eb65997571595248861c56e1d656b7a",
                 "shasum": ""
             },
             "require": {
@@ -146,13 +146,13 @@
                 "cheprasov/php-extra-mocks": "^1.0.0",
                 "phpunit/phpunit": "4.8.*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-0": {
                     "RedisClient\\": "src"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -165,10 +165,15 @@
             "description": "Php client for Redis. It is a fast, fully-functional and user-friendly client for Redis, optimized for performance. RedisClient supports the latest versions of Redis starting from 2.6 to 6.0",
             "homepage": "http://github.com/cheprasov/php-redis-client",
             "support": {
-                "issues": "https://github.com/cheprasov/php-redis-client/issues",
-                "source": "https://github.com/cheprasov/php-redis-client/tree/v1.10.0"
+                "source": "https://github.com/GabBiswajit/php-redis-client/tree/master"
             },
-            "time": "2020-06-20T13:05:24+00:00"
+            "funding": [
+                {
+                    "type": "github",
+                    "url": "https://github.com/cheprasov"
+                }
+            ],
+            "time": "2025-08-13T09:29:36+00:00"
         },
         {
             "name": "netresearch/jsonmapper",
@@ -2828,6 +2833,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "cheprasov/php-redis-client": 20,
         "pocketmine/bedrock-protocol": 20
     },
     "prefer-stable": false,
