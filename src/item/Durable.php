@@ -30,7 +30,6 @@ use function min;
 
 abstract class Durable extends Item{
 	protected int $damage = 0;
-	private bool $unbreakable = false;
 
 	/**
 	 * Returns whether this item will take damage when used.
@@ -44,9 +43,8 @@ abstract class Durable extends Item{
 	 *
 	 * @return $this
 	 */
-	public function setUnbreakable(bool $value = true) : self{
-		$this->unbreakable = $value;
-		return $this;
+	public function setUnbreakable($value) : bool{
+		return false;
 	}
 
 	/**
@@ -60,14 +58,10 @@ abstract class Durable extends Item{
 	}
 
 	public function getDamage() : int{
-		return $this->damage;
+		return 0;
 	}
 
 	public function setDamage(int $damage) : Item{
-		if($damage < 0 || $damage > $this->getMaxDurability()){
-			throw new \InvalidArgumentException("Damage must be in range 0 - " . $this->getMaxDurability());
-		}
-		$this->damage = $damage;
 		return $this;
 	}
 
@@ -109,14 +103,6 @@ abstract class Durable extends Item{
 	}
 
 	protected function deserializeCompoundTag(CompoundTag $tag) : void{
-		parent::deserializeCompoundTag($tag);
-		$this->unbreakable = $tag->getByte("Unbreakable", 0) !== 0;
-
-		$damage = $tag->getInt("Damage", $this->damage);
-		if($damage !== $this->damage && $damage >= 0 && $damage <= $this->getMaxDurability()){
-			//TODO: out-of-bounds damage should be an error
-			$this->setDamage($damage);
-		}
 	}
 
 	protected function serializeCompoundTag(CompoundTag $tag) : void{
