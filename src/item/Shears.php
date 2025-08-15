@@ -45,6 +45,6 @@ class Shears extends Tool{
 	}
 
 	public function onDestroyBlock(Block $block, array &$returnedItems) : bool{
-		return $this->applyDamage(1);
+		return false; // Shears do not destroy blocks, they only harvest them
 	}
 }

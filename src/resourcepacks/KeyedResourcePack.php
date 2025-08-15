@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace pocketmine\resourcepacks;
 
-use pocketmine\utils\BinaryStream;
-
 class KeyedResourcePack extends ZippedResourcePack {
     private string $keyPath;
     private ?string $decryptionKey = null;
@@ -22,12 +20,12 @@ class KeyedResourcePack extends ZippedResourcePack {
         $this->decryptionKey = trim(file_get_contents($this->keyPath));
     }
 
-    public function getPackData() : string{
+    public function getPackData() : string {
         if($this->decryptionKey === null){
             $this->loadKey();
         }
 
-        $encryptedData = parent::getPackData();
+        $encryptedData = $this->getPackData();
         $iv = substr($encryptedData, 0, 16);
         $encrypted = substr($encryptedData, 16);
         

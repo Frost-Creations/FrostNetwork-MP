@@ -16,17 +16,13 @@
  * @author PocketMine Team
  * @link http://www.pocketmine.net/
  *
- *
  */
 
 declare(strict_types=1);
 
 namespace pocketmine\item;
 
-use pocketmine\item\enchantment\VanillaEnchantments;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\utils\Utils;
-use function min;
 
 abstract class Durable extends Item{
 	protected int $damage = 0;
@@ -41,7 +37,7 @@ abstract class Durable extends Item{
 	/**
 	 * Sets whether the item will take damage when used.
 	 *
-	 * @return $this
+	 * @return bool
 	 */
 	public function setUnbreakable($value) : bool{
 		return false;
@@ -53,7 +49,7 @@ abstract class Durable extends Item{
 	 * @return bool if any damage was applied to the item
 	 */
 	public function applyDamage(int $amount) : bool{
-      // our items are not breakable
+		// our items are not breakable
 		return false;
 	}
 
@@ -70,18 +66,10 @@ abstract class Durable extends Item{
 	}
 
 	/**
-	 * Called when the item's damage exceeds its maximum durability.
-	 */
-	protected function onBroken() : void{
-		$this->pop();
-		$this->setDamage(0); //the stack size may be greater than 1 if overstacked by a plugin
-	}
-
-	/**
 	 * Returns the maximum amount of damage this item can take before it breaks.
 	 */
 	public function getMaxDurability() : int{
-      return 0;
+		return 0;
 	}
 
 	/**
@@ -95,8 +83,9 @@ abstract class Durable extends Item{
 	}
 
 	protected function serializeCompoundTag(CompoundTag $tag) : void{
-       parent::serializeCompoundTag($tag);
-       $tag->removeTag("Unbreakable");
-       $tag->removeTag("Damage");
-     }
+		parent::serializeCompoundTag($tag);
+		$tag->setByte("Unbreakable", 1);
+		$tag->removeTag("Damage");
+	}
+
 }
