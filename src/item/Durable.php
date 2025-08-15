@@ -66,19 +66,6 @@ abstract class Durable extends Item{
 	}
 
 	protected function getUnbreakingDamageReduction(int $amount) : int{
-		if(($unbreakingLevel = $this->getEnchantmentLevel(VanillaEnchantments::UNBREAKING())) > 0){
-			$negated = 0;
-
-			$chance = 1 / ($unbreakingLevel + 1);
-			for($i = 0; $i < $amount; ++$i){
-				if(Utils::getRandomFloat() > $chance){
-					$negated++;
-				}
-			}
-
-			return $negated;
-		}
-
 		return 0;
 	}
 
@@ -93,7 +80,9 @@ abstract class Durable extends Item{
 	/**
 	 * Returns the maximum amount of damage this item can take before it breaks.
 	 */
-	abstract public function getMaxDurability() : int;
+	public function getMaxDurability() : int{
+      return 0;
+	}
 
 	/**
 	 * Returns whether the item is broken.
