@@ -36,7 +36,7 @@ abstract class Durable extends Item{
 	 * Returns whether this item will take damage when used.
 	 */
 	public function isUnbreakable() : bool{
-		return $this->unbreakable;
+		return true;
 	}
 
 	/**
@@ -55,18 +55,8 @@ abstract class Durable extends Item{
 	 * @return bool if any damage was applied to the item
 	 */
 	public function applyDamage(int $amount) : bool{
-		if($this->isUnbreakable() || $this->isBroken()){
-			return false;
-		}
-
-		$amount -= $this->getUnbreakingDamageReduction($amount);
-
-		$this->damage = min($this->damage + $amount, $this->getMaxDurability());
-		if($this->isBroken()){
-			$this->onBroken();
-		}
-
-		return true;
+      // our items are not breakable
+		return false;
 	}
 
 	public function getDamage() : int{
@@ -130,8 +120,8 @@ abstract class Durable extends Item{
 	}
 
 	protected function serializeCompoundTag(CompoundTag $tag) : void{
-		parent::serializeCompoundTag($tag);
-		$this->unbreakable ? $tag->setByte("Unbreakable", 1) : $tag->removeTag("Unbreakable");
-		$this->damage !== 0 ? $tag->setInt("Damage", $this->damage) : $tag->removeTag("Damage");
-	}
+       parent::serializeCompoundTag($tag);
+       $tag->removeTag("Unbreakable");
+       $tag->removeTag("Damage");
+     }
 }
