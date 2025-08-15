@@ -50,7 +50,10 @@
       "pocketmine/snooze": "^0.5.0",
       "ramsey/uuid": "~4.8.0",
 	   "symfony/filesystem": "~6.4.0",
-      "cheprasov/php-redis-client": "dev-master"
+      "cheprasov/php-redis-client": "dev-master",
+      "gabbiswajit/await-std": "dev-master",
+      "jetbrains/phpstorm-attributes": "^1.0",
+      "sof3/await-generator": "^3.0"
    },
    "require-dev": {
       "phpstan/phpstan": "2.1.17",
@@ -110,6 +113,10 @@
       {
          "type": "vcs",
          "url": "https://github.com/GabBiswajit/php-redis-client"
+      },
+      {
+         "type": "vcs",
+         "url": "https://github.com/GabBiswajit/await-std"
       }
    ]
 }
